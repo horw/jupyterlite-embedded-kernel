@@ -1,0 +1,15 @@
+node_modules/
+**/node_modules
+**/lib
+**/package.json
+jupyterlite_pyodide_kernel/labextension/
+**/.pyodide/
+.pytest_cache/
+docs/
+build/
+dist/
+CHANGELOG.md
+
+# generated
+_pypi.ts
+**/pypi/all.json
