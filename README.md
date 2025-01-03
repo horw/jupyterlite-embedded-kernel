@@ -4,7 +4,8 @@
 
 An echo kernel for JupyterLite.
 
-[example](./example.webm)
+[![Watch the video]()](./example.webm)]
+
 
 ## Requirements
 
