@@ -4,7 +4,7 @@
 
 An echo kernel for JupyterLite.
 
-[![Watch the video]()](https://github.com/horw/jupyterlite-embedded-kernel/raw/refs/heads/main/example.webmm)]
+[![Watch the video]()](https://github.com/horw/jupyterlite-embedded-kernel/raw/refs/heads/main/example.webm)
 
 
 ## Requirements
