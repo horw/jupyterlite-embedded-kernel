@@ -10,6 +10,41 @@ export class EchoKernel extends BaseKernel {
   public reader?: ReadableStreamDefaultReader<Uint8Array>; // The serial port reader.
   public writer?: WritableStreamDefaultWriter<Uint8Array>; // The serial port writer.
 
+  async processSerialData() {
+    try {
+      let last_line = '';
+      while (this.reader) {
+        console.log("hello");
+        const { done, value } = await this.reader.read();
+
+        if (done) {
+          console.log("Serial port closed.");
+          return; // End the task when done is true
+        }
+
+        const data = last_line + new TextDecoder().decode(value);
+        const lines = data.split("\r\n");
+
+        for (let i = 0; i < lines.length - 1; i++) {
+          const line = lines[i];
+          this.stream({
+            // execution_count: this.executionCount,
+            text:  line+'\n',
+            name: 'stdout'
+          });
+          if (line.includes('>>>')) {
+            console.log("Found '>>>' string, stopping process.");
+            return;
+          }
+        }
+        last_line = lines[lines.length - 1];
+
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   /**
    * Handle a kernel_info_request message
    */
@@ -64,55 +99,14 @@ export class EchoKernel extends BaseKernel {
       await this.writer.write(ctrl_e);
       await this.writer.write(new_line);
 
-      const lines = code.split("\n"); // Split the code into lines
-      for (const line of lines) {
-        const data = encoder.encode(line+"\n");
-        await this.writer.write(data);
-        // await this.writer.write(new_line);
-        console.log("Sent to serial:", data);
-      }
+      const data = encoder.encode(code);
+      await this.writer.write(data);
 
       await this.writer.write(ctrl_d);
       await this.writer.write(new_line);
 
     }
-
-    const processSerialData = async () => {
-      try {
-        let last_line = '';
-        while (this.reader) {
-          const { done, value } = await this.reader.read();
-
-          if (done) {
-            console.log("Serial port closed.");
-            return; // End the task when done is true
-          }
-
-          const data = last_line + new TextDecoder().decode(value);
-          const lines = data.split("\r\n");
-
-          for (let i = 0; i < lines.length - 1; i++) {
-            const line = lines[i];
-            this.publishExecuteResult({
-              execution_count: this.executionCount,
-              data: {
-                'text/plain': line
-              },
-              metadata: {}
-            });
-            if (line.includes('>>>')) {
-              console.log("Found '>>>' string, stopping process.");
-              return;
-            }
-          }
-          last_line = lines[lines.length - 1];
-
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    };
-    await processSerialData();
+    await this.processSerialData();
 
     return {
       status: 'ok',

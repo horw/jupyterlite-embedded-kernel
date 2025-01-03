@@ -4,8 +4,7 @@
 
 An echo kernel for JupyterLite.
 
-![echo-kernel](https://user-images.githubusercontent.com/591645/135660177-13f909fb-b63b-4bc9-9bf3-e2b6c37ee015.gif)
-
+[example](./example.webm)
 
 ## Requirements
 
