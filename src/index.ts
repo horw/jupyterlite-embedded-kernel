@@ -30,7 +30,40 @@ const kernel: JupyterLiteServerPlugin<void> = {
         }
       },
       create: async (options: IKernel.IOptions): Promise<IKernel> => {
-        return new EchoKernel(options);
+        const kernel = new EchoKernel(options);
+
+        async function connectSerialPort() {
+          try {
+            // Request a port and open a connection
+            const port = await navigator.serial.requestPort();
+            await port.open({ baudRate: 115200 });
+
+            const reader = port.readable?.getReader();
+            const writer = port.writable?.getWriter();
+
+            // Expose reader and writer to the kernel
+            kernel.reader = reader;
+            kernel.writer = writer;
+
+            // Add a function to handle reading from the serial port
+            // function readFromSerial() {
+            //   if (reader) {
+            //
+            //   }
+            // }
+
+            // Periodically check for incoming data from the serial port
+            // setInterval(readFromSerial, 1000);
+
+          } catch (err) {
+            console.error('Serial Port Error:', err);
+          }
+        }
+
+        // Initialize the serial connection
+        await connectSerialPort();
+
+        return kernel;
       }
     });
   }

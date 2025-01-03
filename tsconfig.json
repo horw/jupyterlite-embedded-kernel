@@ -17,8 +17,8 @@
     "rootDir": "src",
     "strict": true,
     "strictNullChecks": true,
-    "target": "es2017",
-    "types": []
+    "target": "es2020",
+    "lib": ["dom", "esnext"]
   },
   "include": ["src/*"]
 }
