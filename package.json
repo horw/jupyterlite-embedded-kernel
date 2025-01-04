@@ -1,5 +1,5 @@
 {
-  "name": "@jupyterlite/pyodide-kernel-root",
+  "name": "embedded-kernel",
   "version": "0.3.0",
   "private": true,
   "workspaces": {
@@ -134,5 +134,8 @@
       "eqeqeq": "error",
       "prefer-arrow-callback": "error"
     }
+  },
+  "dependencies": {
+    "@types/w3c-web-serial": "^1.0.7"
   }
 }
