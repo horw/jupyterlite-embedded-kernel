@@ -1,7 +1,7 @@
 import { JupyterLiteServer, JupyterLiteServerPlugin } from '@jupyterlite/server';
 
-import { IKernel, IKernelSpecs} from '@jupyterlite/kernel';
-import {EchoKernel} from "./kernel";
+import { IKernel, IKernelSpecs } from '@jupyterlite/kernel';
+import { EchoKernel } from './kernel';
 
 /**
  * Plugin configuration for the enhanced kernel
@@ -11,7 +11,6 @@ const enhancedKernel: JupyterLiteServerPlugin<void> = {
   autoStart: true,
   requires: [IKernelSpecs],
   activate: (app: JupyterLiteServer, kernelspecs: IKernelSpecs) => {
-
     const activeKernels = new Map<string, EchoKernel>();
 
     app.router.post('/api/kernels/(.*)/interrupt', async (req, kernelId: string) => {
@@ -28,7 +27,6 @@ const enhancedKernel: JupyterLiteServerPlugin<void> = {
       return new Response('Kernel not found', { status: 404 });
     });
 
-
     kernelspecs.register({
       spec: {
         name: 'enhanced',
@@ -41,7 +39,6 @@ const enhancedKernel: JupyterLiteServerPlugin<void> = {
         },
       },
       create: async (options: IKernel.IOptions): Promise<IKernel> => {
-
         const kernel = new EchoKernel(options);
         activeKernels.set(kernel.id, kernel);
 
@@ -51,7 +48,7 @@ const enhancedKernel: JupyterLiteServerPlugin<void> = {
             await port.open({ baudRate: 115200 });
             //
             await port.setSignals({ dataTerminalReady: false });
-            await new Promise(resolve => setTimeout(resolve, 200));
+            await new Promise((resolve) => setTimeout(resolve, 200));
             await port.setSignals({ dataTerminalReady: true });
             //
             // await port.open({ baudRate: 115200 });
@@ -62,7 +59,6 @@ const enhancedKernel: JupyterLiteServerPlugin<void> = {
             kernel.reader = reader;
             kernel.writer = writer;
             kernel.port = port;
-
           } catch (err) {
             console.error('Serial Port Error:', err);
           }
@@ -71,7 +67,7 @@ const enhancedKernel: JupyterLiteServerPlugin<void> = {
         console.log('Creating enhanced kernel instance');
         await kernel.ready;
         return kernel;
-    },
+      },
     });
 
     console.log('Enhanced kernel plugin activated');

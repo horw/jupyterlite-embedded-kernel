@@ -1,5 +1,5 @@
 {
-  "name": "@jupyterlite/pyodide-kernel-extension",
+  "name": "embedded-kernel-extension",
   "version": "0.5.0-beta.0",
   "description": "JupyterLite - Pyodide Kernel Extension",
   "homepage": "https://github.com/jupyterlite/pyodide-kernel",
@@ -39,7 +39,7 @@
     "dist": "cd ../../dist && npm pack ../packages/pyodide-kernel-extension",
     "clean": "jlpm clean:lib",
     "clean:lib": "rimraf lib tsconfig.tsbuildinfo",
-    "clean:labextension": "rimraf ../../jupyterlite_pyodide_kernel/labextension",
+    "clean:labextension": "rimraf ../../jupyter_embedded_kernel/labextension",
     "clean:all": "jlpm clean:lib && jlpm clean:labextension",
     "docs": "typedoc src",
     "watch": "run-p watch:src watch:labextension",
@@ -63,7 +63,7 @@
   },
   "jupyterlab": {
     "extension": true,
-    "outputDir": "../../jupyterlite_pyodide_kernel/labextension",
+    "outputDir": "../../jupyter_embedded_kernel/labextension",
     "webpackConfig": "webpack.config.js",
     "sharedPackages": {
       "@jupyterlite/kernel": {

@@ -6,10 +6,10 @@ requires = [
 build-backend = "hatchling.build"
 
 [project]
-name = "jupyterlite-pyodide-kernel"
+name = "jupyterlite-embedded-kernel"
 dynamic = ["version"]
 readme = "README.md"
-description = "Python kernel for JupyterLite powered by Pyodide"
+description = "Python kernel for JupyterLite powered for embedded devices."
 authors = [
     { name = "JupyterLite Contributors" },
 ]
@@ -48,13 +48,6 @@ Source = "https://github.com/jupyterlite/pyodide-kernel"
 Issues = "https://github.com/jupyterlite/pyodide-kernel/issues"
 PyPI = "https://pypi.org/project/jupyterlite-pyodide-kernel"
 
-[project.scripts]
-jupyter-piplite = "jupyterlite_pyodide_kernel.app:main"
-
-[project.entry-points."jupyterlite.addon.v0"]
-jupyterlite-pyodide-kernel-piplite = "jupyterlite_pyodide_kernel.addons.piplite:PipliteAddon"
-jupyterlite-pyodide-kernel-pyodide = "jupyterlite_pyodide_kernel.addons.pyodide:PyodideAddon"
-
 [project.optional-dependencies]
 dev = [
     "build",
@@ -88,16 +81,16 @@ docs = [
 allow-direct-references = true
 
 [tool.hatch.version]
-path = "jupyterlite_pyodide_kernel/_version.py"
+path = "jupyter_embedded_kernel/__init__.py"
 
 [tool.hatch.build.targets.sdist]
-artifacts = ["jupyterlite_pyodide_kernel/labextension"]
+artifacts = ["embedded-kernel-extension/labextension"]
 exclude = [
     ".github",
-    "/jupyterlite_pyodide_kernel/tests/fixtures/.pyodide"
+    "/embedded-kernel-extension/tests/fixtures/.pyodide"
 ]
 include = [
-    "/jupyterlite_pyodide_kernel",
+    "/jupyter_embedded_kernel",
     "/package.json",
     "/install.json",
     "/ts*.json",
@@ -106,28 +99,25 @@ include = [
 
 [tool.hatch.build.targets.wheel]
 include = [
-    "/jupyterlite_pyodide_kernel",
+    "/embedded-kernel-extension",
 ]
 
 [tool.hatch.build.targets.wheel.shared-data]
-"jupyterlite_pyodide_kernel/labextension" = "share/jupyter/labextensions/@jupyterlite/pyodide-kernel-extension"
+"embedded-kernel-extension/labextension" = "share/jupyter/labextensions/@jupyterlite/pyodide-kernel-extension"
 "install.json" = "share/jupyter/labextensions/@jupyterlite/pyodide-kernel-extension/install.json"
 
 [tool.pytest.ini_options]
 addopts = [
     "--pyargs",
-    "jupyterlite_pyodide_kernel",
+    "embedded-kernel-extension",
     "-vv",
-    # asyncio
     "--script-launch-mode=subprocess",
-    # cov
-    "--cov=jupyterlite_pyodide_kernel",
+    "--cov=embedded-kernel-extension",
     "--cov-report=term-missing:skip-covered",
     "--cov-report=html:build/reports/htmlcov",
     "--cov-branch",
     "--cov-fail-under=95",
     "--no-cov-on-fail",
-    # html
     "--html=build/reports/pytest.html",
     "--self-contained-html",
 ]
@@ -160,7 +150,6 @@ extend-include = ["*.ipynb"]
 include = [
     "setup.py",
     "scripts/**/*.py",
-    "jupyterlite_pyodide_kernel/**/*.py",
-    "packages/pyodide-kernel/py/**/*.py",
+    "embedded-kernel-extension/**/*.py",
     "examples/**/*.ipynb"
 ]

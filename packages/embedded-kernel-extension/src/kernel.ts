@@ -1,6 +1,5 @@
-import {BaseKernel} from "@jupyterlite/kernel";
-import {KernelMessage} from "@jupyterlab/services";
-
+import { BaseKernel } from '@jupyterlite/kernel';
+import { KernelMessage } from '@jupyterlab/services';
 
 /**
  * A kernel that echos content back.
@@ -10,32 +9,30 @@ export class EchoKernel extends BaseKernel {
   public writer?: WritableStreamDefaultWriter<Uint8Array>; // The serial port writer.
   public port?: SerialPort; // The serial port writer.
 
-
   private blocker: Promise<void> | null = null;
   private blockerResolve: (() => void) | null = null;
   private first_run = true;
 
   private setBlocked(blocked: boolean): void {
-      if (blocked && !this.blocker) {
-          this.blocker = new Promise(resolve => {
-              this.blockerResolve = resolve;
-          });
-      } else if (!blocked && this.blockerResolve) {
-          this.blockerResolve();
-          this.blocker = null;
-          this.blockerResolve = null;
-      }
+    if (blocked && !this.blocker) {
+      this.blocker = new Promise((resolve) => {
+        this.blockerResolve = resolve;
+      });
+    } else if (!blocked && this.blockerResolve) {
+      this.blockerResolve();
+      this.blocker = null;
+      this.blockerResolve = null;
+    }
   }
 
   async interrupt(): Promise<void> {
     if (this.writer) {
-      const ctrl_c = new Uint8Array([3])
+      const ctrl_c = new Uint8Array([3]);
       const encoder = new TextEncoder();
       const new_line = encoder.encode('\r\n');
       await this.writer.write(ctrl_c);
       await this.writer.write(new_line);
     }
-
   }
 
   private streamOutput(output: string) {
@@ -48,18 +45,21 @@ export class EchoKernel extends BaseKernel {
   // /*
   //  * https://github.com/WICG/serial/issues/122
   //  */
-  async readWithTimeout(timeoutMs: number = 500): Promise<Uint8Array | null | undefined> {
-    if (!this.reader) return null;
-    const result = await this.reader.read()
-    return result.value
+  async readWithTimeout(
+    timeoutMs: number = 500,
+  ): Promise<Uint8Array | null | undefined> {
+    if (!this.reader) {
+      return null;
+    }
+    const result = await this.reader.read();
+    return result.value;
   }
 
-  public async read_loop(){
+  public async read_loop() {
     let outputBuffer = ''; // Buffer to accumulate data
     const sendInterval = 500; // Interval in milliseconds to send data
 
     const sendData = () => {
-
       if (outputBuffer) {
         this.streamOutput(outputBuffer); // Send accumulated data
         console.log(outputBuffer);
@@ -71,28 +71,29 @@ export class EchoKernel extends BaseKernel {
     try {
       while (this.reader) {
         const value = await this.readWithTimeout();
-        if (!value){ continue }
+        if (!value) {
+          continue;
+        }
 
         const data = new TextDecoder().decode(value);
-        console.log('Current buffer before: ', outputBuffer)
-        outputBuffer += data
-        console.log('Data: ',data)
-        console.log('Current buffer after: ', outputBuffer)
+        console.log('Current buffer before: ', outputBuffer);
+        outputBuffer += data;
+        console.log('Data: ', data);
+        console.log('Current buffer after: ', outputBuffer);
         if (data.includes('>>>')) {
-          this.setBlocked(false)
+          this.setBlocked(false);
         }
       }
-    }
-      finally {
+    } finally {
       clearInterval(intervalId); // Stop the timer when exiting the loop
       sendData(); // Ensure remaining data is sent
     }
   }
 
   private async waitForPrompt(): Promise<void> {
-      if (this.blocker) {
-          await this.blocker;
-      }
+    if (this.blocker) {
+      await this.blocker;
+    }
   }
 
   // async readUntilError() {
@@ -144,11 +145,10 @@ export class EchoKernel extends BaseKernel {
     content: KernelMessage.IExecuteRequestMsg['content'],
   ): Promise<KernelMessage.IExecuteReplyMsg['content']> {
     this.setBlocked(true);
-    if(this.first_run){
-        this.read_loop();
-        this.first_run = false;
+    if (this.first_run) {
+      this.read_loop();
+      this.first_run = false;
     }
-
 
     const { code } = content;
 
@@ -158,7 +158,7 @@ export class EchoKernel extends BaseKernel {
     const ctrl_e = new Uint8Array([5]);
 
     const new_line = encoder.encode('\r\n');
-    console.log('2')
+    console.log('2');
 
     if (this.writer) {
       await this.writer.write(ctrl_e);
@@ -170,9 +170,9 @@ export class EchoKernel extends BaseKernel {
       await this.writer.write(ctrl_d);
       await this.writer.write(new_line);
     }
-    console.log('3')
+    console.log('3');
     await this.waitForPrompt();
-    console.log('4')
+    console.log('4');
     return {
       status: 'ok',
       execution_count: this.executionCount,
@@ -186,13 +186,11 @@ export class EchoKernel extends BaseKernel {
     throw new Error('Not implemented');
   }
 
-
   async inspectRequest(
     content: KernelMessage.IInspectRequestMsg['content'],
   ): Promise<KernelMessage.IInspectReplyMsg['content']> {
     throw new Error('Not implemented');
   }
-
 
   async isCompleteRequest(
     content: KernelMessage.IIsCompleteRequestMsg['content'],
@@ -205,7 +203,6 @@ export class EchoKernel extends BaseKernel {
   ): Promise<KernelMessage.ICommInfoReplyMsg['content']> {
     throw new Error('Not implemented');
   }
-
 
   inputReply(content: KernelMessage.IInputReplyMsg['content']): void {}
 

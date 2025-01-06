@@ -20,16 +20,16 @@
       "dependsOn": ["build:py", "^build"],
       "outputs": [
         "{projectRoot}/lib",
-        "{projectRoot}/jupyterlite_pyodide_kernel/labextension/package.json",
-        "{projectRoot}/jupyterlite_pyodide_kernel/labextension/static/pypi/all.json"
+        "{projectRoot}/jupyterlite_embedded_kernel/labextension/package.json",
+        "{projectRoot}/jupyterlite_embedded_kernel/labextension/static/pypi/all.json"
       ]
     },
     "build:prod": {
       "dependsOn": ["build:py", "^build:prod"],
       "outputs": [
         "{projectRoot}/lib",
-        "{projectRoot}/jupyterlite_pyodide_kernel/labextension/package.json",
-        "{projectRoot}/jupyterlite_pyodide_kernel/labextension/static/pypi/all.json"
+        "{projectRoot}/jupyterlite_embedded_kernel/labextension/package.json",
+        "{projectRoot}/jupyterlite_embedded_kernel/labextension/static/pypi/all.json"
       ]
     }
   }
