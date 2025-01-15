@@ -19,5 +19,6 @@
     "strictNullChecks": true,
     "target": "ES2019",
     "types": ["w3c-web-serial"]
-  }
+  },
+  "include": ["src/**/*"]
 }
