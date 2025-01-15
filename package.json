@@ -55,6 +55,7 @@
   },
   "devDependencies": {
     "@jupyterlab/builder": "~4.3.3",
+    "@types/w3c-web-serial": "^1.0.7",
     "rimraf": "^5.0.1",
     "typescript": "~5.2.2"
   },

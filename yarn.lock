@@ -566,6 +566,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/w3c-web-serial@npm:^1.0.7":
+  version: 1.0.7
+  resolution: "@types/w3c-web-serial@npm:1.0.7"
+  checksum: 3acebdcaeef6249b074d1500cc76c425669b9a14b9ba7b4d0bed0a6d5df887a0b5260fa61f5061625602340732662493da34836546776dcb03647166527190c2
+  languageName: node
+  linkType: hard
+
 "@types/webpack-sources@npm:^0.1.5":
   version: 0.1.12
   resolution: "@types/webpack-sources@npm:0.1.12"
@@ -1205,6 +1212,7 @@ __metadata:
     "@jupyterlite/kernel": ^0.5.0-alpha.0
     "@jupyterlite/pyodide-kernel": ^0.5.0-beta.0
     "@jupyterlite/server": ^0.5.0-alpha.0
+    "@types/w3c-web-serial": ^1.0.7
     rimraf: ^5.0.1
     typescript: ~5.2.2
   languageName: unknown
