@@ -5,7 +5,7 @@ node_modules/
 *.egg-info/
 .ipynb_checkpoints
 *.tsbuildinfo
-jupyterlite_pyodide_kernel/labextension
+jupyterlite_embedded_kernel/labextension
 
 # Created by https://www.gitignore.io/api/python
 # Edit at https://www.gitignore.io/?templates=python
@@ -126,3 +126,4 @@ ui-tests/playwright-report/
 
 # Yarn cache
 .yarn/
+.idea/
