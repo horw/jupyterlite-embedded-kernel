@@ -18,6 +18,8 @@
     "strict": true,
     "strictNullChecks": true,
     "target": "ES2019",
+    "outDir": "./lib",
+    "rootDir": "./src",
     "types": ["w3c-web-serial"]
   },
   "include": ["src/"]

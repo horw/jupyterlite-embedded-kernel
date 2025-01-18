@@ -81,16 +81,16 @@ docs = [
 allow-direct-references = true
 
 [tool.hatch.version]
-path = "jupyter_embedded_kernel/__init__.py"
+path = "jupyterlite_embedded_kernel/__init__.py"
 
 [tool.hatch.build.targets.sdist]
-artifacts = ["embedded-kernel-extension/labextension"]
+artifacts = ["jupyterlite_embedded_kernel/labextension"]
 exclude = [
     ".github",
-    "/embedded-kernel-extension/tests/fixtures/.pyodide"
+    "/jupyterlite_embedded_kernel/tests/fixtures/.pyodide"
 ]
 include = [
-    "/jupyter_embedded_kernel",
+    "/jupyterlite_embedded_kernel",
     "/package.json",
     "/install.json",
     "/ts*.json",
@@ -99,20 +99,20 @@ include = [
 
 [tool.hatch.build.targets.wheel]
 include = [
-    "/embedded-kernel-extension",
+    "/jupyterlite_embedded_kernel",
 ]
 
 [tool.hatch.build.targets.wheel.shared-data]
-"embedded-kernel-extension/labextension" = "share/jupyter/labextensions/@jupyterlite/pyodide-kernel-extension"
+"jupyterlite_embedded_kernel/labextension" = "share/jupyter/labextensions/@jupyterlite/pyodide-kernel-extension"
 "install.json" = "share/jupyter/labextensions/@jupyterlite/pyodide-kernel-extension/install.json"
 
 [tool.pytest.ini_options]
 addopts = [
     "--pyargs",
-    "embedded-kernel-extension",
+    "jupyterlite_embedded_kernel",
     "-vv",
     "--script-launch-mode=subprocess",
-    "--cov=embedded-kernel-extension",
+    "--cov=jupyterlite_embedded_kernel",
     "--cov-report=term-missing:skip-covered",
     "--cov-report=html:build/reports/htmlcov",
     "--cov-branch",
@@ -150,6 +150,6 @@ extend-include = ["*.ipynb"]
 include = [
     "setup.py",
     "scripts/**/*.py",
-    "embedded-kernel-extension/**/*.py",
+    "jupyterlite_embedded_kernel/**/*.py",
     "examples/**/*.ipynb"
 ]
