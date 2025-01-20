@@ -11,7 +11,7 @@ dynamic = ["version"]
 readme = "README.md"
 description = "Python kernel for JupyterLite powered for embedded devices."
 authors = [
-    { name = "JupyterLite Contributors" },
+    { name = "Igor Udot" },
 ]
 keywords = [
     "jupyterlite",
@@ -19,7 +19,6 @@ keywords = [
     "jupyterlab",
     "notebook",
     "browser",
-    "pyodide",
 ]
 license = { file = "LICENSE" }
 requires-python = ">=3.9"
@@ -42,11 +41,11 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://jupyterlite-pyodide-kernel.readthedocs.io"
-Documentation = "https://jupyterlite-pyodide-kernel.readthedocs.io"
-Source = "https://github.com/jupyterlite/pyodide-kernel"
-Issues = "https://github.com/jupyterlite/pyodide-kernel/issues"
-PyPI = "https://pypi.org/project/jupyterlite-pyodide-kernel"
+Homepage = ""
+Documentation = ""
+Source = ""
+Issues = ""
+PyPI = ""
 
 [project.optional-dependencies]
 dev = [
@@ -103,43 +102,8 @@ include = [
 ]
 
 [tool.hatch.build.targets.wheel.shared-data]
-"jupyterlite_embedded_kernel/labextension" = "share/jupyter/labextensions/@jupyterlite/pyodide-kernel-extension"
-"install.json" = "share/jupyter/labextensions/@jupyterlite/pyodide-kernel-extension/install.json"
-
-[tool.pytest.ini_options]
-addopts = [
-    "--pyargs",
-    "jupyterlite_embedded_kernel",
-    "-vv",
-    "--script-launch-mode=subprocess",
-    "--cov=jupyterlite_embedded_kernel",
-    "--cov-report=term-missing:skip-covered",
-    "--cov-report=html:build/reports/htmlcov",
-    "--cov-branch",
-    "--cov-fail-under=95",
-    "--no-cov-on-fail",
-    "--html=build/reports/pytest.html",
-    "--self-contained-html",
-]
-
-[tool.jupyter-releaser.options]
-version_cmd = "python scripts/bump-version.py"
-
-[tool.jupyter-releaser.hooks]
-before-bump-version = [
-    "python -m pip install 'jupyterlab~=4.3.3'",
-    "jlpm"
-]
-before-build-npm = [
-    "python -m pip install 'jupyterlab~=4.3.3' hatch",
-    "python -m pip install -e .[dev]",
-    "jlpm",
-    "jlpm build:prod",
-]
-before-build-python = [
-    "jlpm",
-    "jlpm build:prod",
-]
+"jupyterlite_embedded_kernel/labextension" = "share/jupyter/labextensions/@jupyterlite/jupyterlite-embedded-kernel"
+"install.json" = "share/jupyter/labextensions/@jupyterlite/jupyterlite-embedded-kernel/install.json"
 
 [tool.check-wheel-contents]
 ignore = ["W002"]
