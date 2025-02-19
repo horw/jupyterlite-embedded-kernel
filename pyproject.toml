@@ -41,11 +41,12 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = ""
-Documentation = ""
-Source = ""
-Issues = ""
-PyPI = ""
+Homepage = "https://github.com/horw/jupyterlite-embedded-kernel"
+Documentation = "https://github.com/horw/jupyterlite-embedded-kernel#readme"
+Source = "https://github.com/horw/jupyterlite-embedded-kernel"
+Issues = "https://github.com/horw/jupyterlite-embedded-kernel/issues"
+PyPI = "https://pypi.org/project/jupyterlite-embedded-kernel"
+Project-URL= "https://github.com/horw/jupyterlite-embedded-kernel"
 
 [project.optional-dependencies]
 dev = [
