@@ -1,14 +1,16 @@
 import { BaseKernel } from '@jupyterlite/kernel';
 import { KernelMessage } from '@jupyterlab/services';
+import { ESPLoader, FlashOptions, LoaderOptions, Transport } from 'esptool-js';
+
 
 /**
- * A kernel that echos content back.
+ * A kernel that handles MicroPython flashing and serial communication
  */
 export class EchoKernel extends BaseKernel {
-  public reader?: ReadableStreamDefaultReader<Uint8Array>; // The serial port reader.
-  public writer?: WritableStreamDefaultWriter<Uint8Array>; // The serial port writer.
-  public port?: SerialPort; // The serial port writer.
-
+  public reader?: ReadableStreamDefaultReader<Uint8Array>;
+  public writer?: WritableStreamDefaultWriter<Uint8Array>;
+  public device?: SerialPort;
+  public esploader?: ESPLoader;
   private blocker: Promise<void> | null = null;
   private blockerResolve: (() => void) | null = null;
   private first_run = true;
@@ -42,9 +44,6 @@ export class EchoKernel extends BaseKernel {
     });
   }
 
-  // /*
-  //  * https://github.com/WICG/serial/issues/122
-  //  */
   async readWithTimeout(
     timeoutMs: number = 500,
   ): Promise<Uint8Array | null | undefined> {
@@ -56,14 +55,14 @@ export class EchoKernel extends BaseKernel {
   }
 
   public async read_loop() {
-    let outputBuffer = ''; // Buffer to accumulate data
-    const sendInterval = 500; // Interval in milliseconds to send data
+    let outputBuffer = '';
+    const sendInterval = 500;
 
     const sendData = () => {
       if (outputBuffer) {
-        this.streamOutput(outputBuffer); // Send accumulated data
+        this.streamOutput(outputBuffer);
         console.log(outputBuffer);
-        outputBuffer = ''; // Clear the buffer
+        outputBuffer = '';
       }
     };
     const intervalId = setInterval(sendData, sendInterval);
@@ -85,8 +84,8 @@ export class EchoKernel extends BaseKernel {
         }
       }
     } finally {
-      clearInterval(intervalId); // Stop the timer when exiting the loop
-      sendData(); // Ensure remaining data is sent
+      clearInterval(intervalId);
+      sendData();
     }
   }
 
@@ -96,49 +95,96 @@ export class EchoKernel extends BaseKernel {
     }
   }
 
-  // async readUntilError() {
-  //   try {
-  //     while (this.reader) {
-  //       const data  = await this.readWithTimeout();
-  //       if (data){
-  //         const value = new TextDecoder().decode(data);
-  //         this.streamOutput(value)
-  //       }
-  //     }
-  //   } catch (error) {
-  //     console.error(error);
-  //     return
-  //   }
-  // }
+  /**
+   * Flash MicroPython to the connected ESP device
+   */
+  async flashMicroPython(firmwareUrl: string): Promise<void> {
+    try {
+      // Request port access with filters for ESP32-C3
+      const portFilters = [
+        // ESP32-C3 common USB IDs
+        { usbVendorId: 0x303A, usbProductId: 0x1001 },  // ESP32-C3 default
+        { usbVendorId: 0x10C4, usbProductId: 0xEA60 },  // CP2102 USB-to-UART
+        { usbVendorId: 0x1A86, usbProductId: 0x7523 }   // CH340 USB-to-UART
+      ];
 
-  async kernelInfoRequest(): Promise<KernelMessage.IInfoReplyMsg['content']> {
-    const content: KernelMessage.IInfoReply = {
-      implementation: 'embedded',
-      implementation_version: '1.0.0',
-      language_info: {
-        codemirror_mode: {
-          name: 'python',
-          version: 3,
-        },
-        file_extension: '.py',
-        mimetype: 'text/x-python',
-        name: 'python',
-        nbconvert_exporter: 'python',
-        pygments_lexer: 'ipython3',
-        version: '3.8',
-      },
-      protocol_version: '5.3',
-      status: 'ok',
-      banner: 'Echo Kernel with Serial Support',
-      help_links: [
-        {
-          text: 'Echo Kernel',
-          url: 'https://github.com/jupyterlite/echo-kernel',
-        },
-      ],
-    };
+      this.streamOutput('Please select your ESP32-C3 device...\n');
 
-    return content;
+      if (!this.device) {
+        console.log("Requesting port");
+        this.device = await navigator.serial.requestPort({ filters: portFilters });
+      }
+      console.log("123")
+      var transport = new Transport(this.device, true);
+
+      console.log("TR port");
+      const flashOptions = {
+        transport,
+        baudrate: 115600,
+      } as LoaderOptions;
+      var esploader = new ESPLoader(flashOptions);
+      console.log("START")
+      var chip = await esploader.main();
+  
+      // Temporarily broken
+      // await esploader.flashId();
+      console.log("Settings done for :" + chip);
+
+    //   if (!this.device) {
+    //     throw new Error('Failed to get serial port access');
+    //   }
+
+    //   // Initialize ESPLoader with updated options
+    //   const loaderOptions: ESPLoaderOptions = {
+    //     transport: Transport.SERIAL,
+    //     baudrate: 115200,
+    //     serialPort: this.device
+    //   };
+      
+      try {
+        // Connect and identify the chip
+        this.streamOutput('Connected to ESP32-C3\n');
+
+        const response = await fetch(firmwareUrl);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch firmware: ${response.statusText}`);
+        }
+        const firmware = await response.arrayBuffer();
+
+        // Flash the firmware with flash options
+        this.streamOutput('Starting to flash MicroPython...\n');
+        const flashOptions: FlashOptions = {
+          fileArray: [{
+            data: Buffer.from(firmware).toString('base64'),
+            address: 0x0
+          }],
+          flashSize: '4MB',  // Common size for ESP32-C3
+          flashMode: 'DIO',  // Default flash mode
+          flashFreq: '40MHz', // Common frequency
+          eraseAll: true,    // Ensure clean flash
+          compress: true,    // Enable compression
+          reportProgress: (fileIndex: number, written: number, total: number) => {
+            const progress = (written / total) * 100;
+            this.streamOutput(`Flashing progress: ${Math.round(progress)}% (${written}/${total} bytes)\n`);
+          }
+        };
+        
+        await esploader.writeFlash(flashOptions);  // Changed to writeFlash method
+        this.streamOutput('MicroPython flashed successfully!\n');
+
+        // Reset the device
+        this.streamOutput('Device reset complete\n');
+
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        this.streamOutput(`Error during flashing: ${errorMessage}\n`);
+        throw error;
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.streamOutput(`Error during flashing: ${errorMessage}\n`);
+      throw error;
+    }
   }
 
   async executeRequest(
@@ -152,13 +198,43 @@ export class EchoKernel extends BaseKernel {
 
     const { code } = content;
 
+    if (code.startsWith('%%flash_micropython')) {
+      const url = code.split('\n')[1].trim();
+      if (!url) {
+        return {
+          status: 'error',
+          execution_count: this.executionCount,
+          ename: 'ValueError',
+          evalue: 'Missing MicroPython firmware URL',
+          traceback: ['Please provide MicroPython firmware URL']
+        };
+      }
+      
+      try {
+        await this.flashMicroPython(url);
+        return {
+          status: 'ok',
+          execution_count: this.executionCount,
+          user_expressions: {},
+          payload: []
+        };
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        return {
+          status: 'error',
+          execution_count: this.executionCount,
+          ename: 'FlashError',
+          evalue: errorMessage,
+          traceback: [`Error flashing MicroPython: ${errorMessage}`]
+        };
+      }
+    }
+
     const encoder = new TextEncoder();
-    // const ctrl_a = new Uint8Array([1])
     const ctrl_d = new Uint8Array([4]);
     const ctrl_e = new Uint8Array([5]);
 
     const new_line = encoder.encode('\r\n');
-    console.log('2');
 
     if (this.writer) {
       await this.writer.write(ctrl_e);
@@ -170,9 +246,9 @@ export class EchoKernel extends BaseKernel {
       await this.writer.write(ctrl_d);
       await this.writer.write(new_line);
     }
-    console.log('3');
+
     await this.waitForPrompt();
-    console.log('4');
+
     return {
       status: 'ok',
       execution_count: this.executionCount,
@@ -211,4 +287,34 @@ export class EchoKernel extends BaseKernel {
   async commMsg(msg: KernelMessage.ICommMsgMsg): Promise<void> {}
 
   async commClose(msg: KernelMessage.ICommCloseMsg): Promise<void> {}
+
+  async kernelInfoRequest(): Promise<KernelMessage.IInfoReplyMsg['content']> {
+    const content: KernelMessage.IInfoReply = {
+      implementation: 'embedded',
+      implementation_version: '1.0.0',
+      language_info: {
+        codemirror_mode: {
+          name: 'python',
+          version: 3,
+        },
+        file_extension: '.py',
+        mimetype: 'text/x-python',
+        name: 'python',
+        nbconvert_exporter: 'python',
+        pygments_lexer: 'ipython3',
+        version: '3.8',
+      },
+      protocol_version: '5.3',
+      status: 'ok',
+      banner: 'Echo Kernel with Serial Support',
+      help_links: [
+        {
+          text: 'Echo Kernel',
+          url: 'https://github.com/jupyterlite/echo-kernel',
+        },
+      ],
+    };
+
+    return content;
+  }
 }

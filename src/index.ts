@@ -55,7 +55,7 @@ const enhancedKernel: JupyterLiteServerPlugin<void> = {
 
             kernel.reader = reader;
             kernel.writer = writer;
-            kernel.port = port;
+            kernel.device = port;
           } catch (err) {
             console.error('Serial Port Error:', err);
           }

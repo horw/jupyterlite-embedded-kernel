@@ -918,6 +918,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"atob-lite@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "atob-lite@npm:2.0.0"
+  checksum: 336880fdca40a9f328b9c14781f907ee6e967a4eeca5bdf1926cbb7a9132ff3d9231a0e056b88f2a9ee26affdcdf5886accc6d8e1014cfc50aad48a52112a0f1
+  languageName: node
+  linkType: hard
+
 "balanced-match@npm:^1.0.0":
   version: 1.0.2
   resolution: "balanced-match@npm:1.0.2"
@@ -1270,6 +1277,17 @@ __metadata:
     esrecurse: ^4.3.0
     estraverse: ^4.1.1
   checksum: 47e4b6a3f0cc29c7feedee6c67b225a2da7e155802c6ea13bbef4ac6b9e10c66cd2dcb987867ef176292bf4e64eccc680a49e35e9e9c669f4a02bac17e86abdb
+  languageName: node
+  linkType: hard
+
+"esptool-js@npm:^0.5.4":
+  version: 0.5.4
+  resolution: "esptool-js@npm:0.5.4"
+  dependencies:
+    atob-lite: ^2.0.0
+    pako: ^2.1.0
+    tslib: ^2.4.1
+  checksum: 764b25221c4e7d140e88b2e56363ffda6f9a3e0b7f8765dfe81649823174d214a07b449bfcc7ca9251205c52ca6d579e8101ec314fbb1ea1e7a79bd046a45a4d
   languageName: node
   linkType: hard
 
@@ -1678,6 +1696,7 @@ __metadata:
     "@jupyterlite/pyodide-kernel": ^0.5.0-beta.0
     "@jupyterlite/server": ^0.5.0-alpha.0
     "@types/w3c-web-serial": ^1.0.7
+    esptool-js: ^0.5.4
     rimraf: ^5.0.1
     typescript: ~5.2.2
   languageName: unknown
@@ -1944,6 +1963,13 @@ __metadata:
   version: 1.0.1
   resolution: "package-json-from-dist@npm:1.0.1"
   checksum: 58ee9538f2f762988433da00e26acc788036914d57c71c246bf0be1b60cdbd77dd60b6a3e1a30465f0b248aeb80079e0b34cb6050b1dfa18c06953bb1cbc7602
+  languageName: node
+  linkType: hard
+
+"pako@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "pako@npm:2.1.0"
+  checksum: 71666548644c9a4d056bcaba849ca6fd7242c6cf1af0646d3346f3079a1c7f4a66ffec6f7369ee0dc88f61926c10d6ab05da3e1fca44b83551839e89edd75a3e
   languageName: node
   linkType: hard
 
@@ -2488,7 +2514,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tslib@npm:^2.3.1":
+"tslib@npm:^2.3.1, tslib@npm:^2.4.1":
   version: 2.8.1
   resolution: "tslib@npm:2.8.1"
   checksum: e4aba30e632b8c8902b47587fd13345e2827fa639e7c3121074d5ee0880723282411a8838f830b55100cbe4517672f84a2472667d355b81e8af165a55dc6203a
