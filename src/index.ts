@@ -29,13 +29,13 @@ const enhancedKernel: JupyterLiteServerPlugin<void> = {
 
     kernelspecs.register({
       spec: {
-        name: 'enhanced',
-        display_name: 'Enhanced Kernel',
+        name: 'embedded',
+        display_name: 'Embedded Kernel',
         language: 'python',
         argv: [],
         resources: {
-          'logo-32x32': '',
-          'logo-64x64': '',
+          'logo-32x32': 'https://www.cdnlogo.com/logos/e/41/espressif-systems.svg',
+          'logo-64x64': 'https://www.cdnlogo.com/logos/e/41/espressif-systems.svg',
         },
       },
       create: async (options: IKernel.IOptions): Promise<IKernel> => {
@@ -46,12 +46,9 @@ const enhancedKernel: JupyterLiteServerPlugin<void> = {
           try {
             const port = await navigator.serial.requestPort();
             await port.open({ baudRate: 115200 });
-            //
             await port.setSignals({ dataTerminalReady: false });
             await new Promise((resolve) => setTimeout(resolve, 200));
             await port.setSignals({ dataTerminalReady: true });
-            //
-            // await port.open({ baudRate: 115200 });
 
             const reader = port.readable?.getReader();
             const writer = port.writable?.getWriter();
