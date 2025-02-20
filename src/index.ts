@@ -61,13 +61,13 @@ const enhancedKernel: JupyterLiteServerPlugin<void> = {
           }
         }
         await connectSerialPort();
-        console.log('Creating enhanced kernel instance');
+        console.log('Creating embedded kernel instance');
         await kernel.ready;
         return kernel;
       },
     });
 
-    console.log('Enhanced kernel plugin activated');
+    console.log('Embedded kernel plugin activated');
   },
 };
 
