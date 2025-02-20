@@ -1,120 +1,17 @@
 import { BaseKernel } from '@jupyterlite/kernel';
 import { KernelMessage } from '@jupyterlab/services';
+import { ServiceContainer } from './services/ServiceContainer';
 
-/**
- * A kernel that echos content back.
- */
-export class EchoKernel extends BaseKernel {
-  public reader?: ReadableStreamDefaultReader<Uint8Array>; // The serial port reader.
-  public writer?: WritableStreamDefaultWriter<Uint8Array>; // The serial port writer.
-  public port?: SerialPort; // The serial port writer.
+export class EmbeddedKernel extends BaseKernel {
 
-  private blocker: Promise<void> | null = null;
-  private blockerResolve: (() => void) | null = null;
-  private first_run = true;
-
-  private setBlocked(blocked: boolean): void {
-    if (blocked && !this.blocker) {
-      this.blocker = new Promise((resolve) => {
-        this.blockerResolve = resolve;
-      });
-    } else if (!blocked && this.blockerResolve) {
-      this.blockerResolve();
-      this.blocker = null;
-      this.blockerResolve = null;
-    }
+  constructor(options: any, private serviceContainer: ServiceContainer) {
+    super(options);
   }
-
-  async interrupt(): Promise<void> {
-    if (this.writer) {
-      const ctrl_c = new Uint8Array([3]);
-      const encoder = new TextEncoder();
-      const new_line = encoder.encode('\r\n');
-      await this.writer.write(ctrl_c);
-      await this.writer.write(new_line);
-    }
-  }
-
-  private streamOutput(output: string) {
-    this.stream({
-      text: output,
-      name: 'stdout',
-    });
-  }
-
-  // /*
-  //  * https://github.com/WICG/serial/issues/122
-  //  */
-  async readWithTimeout(
-    timeoutMs: number = 500,
-  ): Promise<Uint8Array | null | undefined> {
-    if (!this.reader) {
-      return null;
-    }
-    const result = await this.reader.read();
-    return result.value;
-  }
-
-  public async read_loop() {
-    let outputBuffer = ''; // Buffer to accumulate data
-    const sendInterval = 500; // Interval in milliseconds to send data
-
-    const sendData = () => {
-      if (outputBuffer) {
-        this.streamOutput(outputBuffer); // Send accumulated data
-        console.log(outputBuffer);
-        outputBuffer = ''; // Clear the buffer
-      }
-    };
-    const intervalId = setInterval(sendData, sendInterval);
-
-    try {
-      while (this.reader) {
-        const value = await this.readWithTimeout();
-        if (!value) {
-          continue;
-        }
-
-        const data = new TextDecoder().decode(value);
-        console.log('Current buffer before: ', outputBuffer);
-        outputBuffer += data;
-        console.log('Data: ', data);
-        console.log('Current buffer after: ', outputBuffer);
-        if (data.includes('>>>')) {
-          this.setBlocked(false);
-        }
-      }
-    } finally {
-      clearInterval(intervalId); // Stop the timer when exiting the loop
-      sendData(); // Ensure remaining data is sent
-    }
-  }
-
-  private async waitForPrompt(): Promise<void> {
-    if (this.blocker) {
-      await this.blocker;
-    }
-  }
-
-  // async readUntilError() {
-  //   try {
-  //     while (this.reader) {
-  //       const data  = await this.readWithTimeout();
-  //       if (data){
-  //         const value = new TextDecoder().decode(data);
-  //         this.streamOutput(value)
-  //       }
-  //     }
-  //   } catch (error) {
-  //     console.error(error);
-  //     return
-  //   }
-  // }
 
   async kernelInfoRequest(): Promise<KernelMessage.IInfoReplyMsg['content']> {
     const content: KernelMessage.IInfoReply = {
       implementation: 'embedded',
-      implementation_version: '1.0.0',
+      implementation_version: '0.1.0',
       language_info: {
         codemirror_mode: {
           name: 'python',
@@ -129,55 +26,86 @@ export class EchoKernel extends BaseKernel {
       },
       protocol_version: '5.3',
       status: 'ok',
-      banner: 'Echo Kernel with Serial Support',
-      help_links: [
-        {
-          text: 'Echo Kernel',
-          url: 'https://github.com/jupyterlite/echo-kernel',
-        },
-      ],
+      banner: 'Embedded Kernel with Serial Support',
+      help_links: [],
     };
 
     return content;
   }
 
+  async interrupt(): Promise<void> {
+    await this.serviceContainer.deviceService.sendInterrupt();
+  }
+
   async executeRequest(
     content: KernelMessage.IExecuteRequestMsg['content'],
   ): Promise<KernelMessage.IExecuteReplyMsg['content']> {
-    this.setBlocked(true);
-    if (this.first_run) {
-      this.read_loop();
-      this.first_run = false;
+
+    console.log("[Kernel] executeRequest - Starting execution");
+    if (this.serviceContainer.deviceService == undefined){
+      console.log("[Kernel] executeRequest - DeviceService is undefined");
+      return {
+          status: 'error',
+          execution_count: this.executionCount,
+          ename: 'ValueError',
+          evalue: 'Missing MicroPython firmware URL',
+          traceback: ['Please provide MicroPython firmware URL']
+        };
     }
 
+    console.log("[Kernel] executeRequest - Processing code");
     const { code } = content;
 
-    const encoder = new TextEncoder();
-    // const ctrl_a = new Uint8Array([1])
-    const ctrl_d = new Uint8Array([4]);
-    const ctrl_e = new Uint8Array([5]);
+    try {
+      console.log("[Kernel] executeRequest - Checking transport");
+      const transport = this.serviceContainer.deviceService.getTransport();
+      console.log(transport)
+      if (!transport) {
+        console.log("[Kernel] executeRequest - No transport available");
+        return {
+          status: 'error',
+          execution_count: this.executionCount,
+          ename: 'TransportError',
+          evalue: 'No transport available',
+          traceback: ['Please connect a device first']
+        };
+      }
+      
+      console.log("[Kernel] executeRequest - Executing command via ConsoleService");
+      // Execute the command and handle the output
+      const result = await this.serviceContainer.consoleService.executeCommand(code, (content) => {
+        console.log("[Kernel] executeRequest - Streaming output:", content.text.substring(0, 50) + (content.text.length > 50 ? '...' : ''));
+        this.stream(content);
+      });
 
-    const new_line = encoder.encode('\r\n');
-    console.log('2');
+      if (!result.success) {
+        console.log("[Kernel] executeRequest - Command execution failed:", result.error);
+        return {
+          status: 'error',
+          execution_count: this.executionCount,
+          ename: 'ExecutionError',
+          evalue: result.error || 'Unknown error',
+          traceback: [result.error || 'Unknown error']
+        };
+      }
 
-    if (this.writer) {
-      await this.writer.write(ctrl_e);
-      await this.writer.write(new_line);
+      console.log("[Kernel] executeRequest - Command executed successfully");
+      return {
+        status: 'ok',
+        execution_count: this.executionCount,
+        user_expressions: {},
+      };
 
-      const data = encoder.encode(code);
-      await this.writer.write(data);
-
-      await this.writer.write(ctrl_d);
-      await this.writer.write(new_line);
+    } catch (error: any) {
+      console.error("[Kernel] executeRequest - Execution error:", error);
+      return {
+        status: 'error',
+        execution_count: this.executionCount,
+        ename: 'ExecuteError',
+        evalue: error instanceof Error ? error.message : 'Unknown error',
+        traceback: error instanceof Error ? [error.stack || ''] : ['Unknown error occurred'],
+      };
     }
-    console.log('3');
-    await this.waitForPrompt();
-    console.log('4');
-    return {
-      status: 'ok',
-      execution_count: this.executionCount,
-      user_expressions: {},
-    };
   }
 
   async completeRequest(

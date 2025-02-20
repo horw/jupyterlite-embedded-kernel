@@ -1,17 +1,17 @@
+// Removed Widget import as we're no longer using @lumino/widgets
 import { JupyterLiteServer, JupyterLiteServerPlugin } from '@jupyterlite/server';
-
 import { IKernel, IKernelSpecs } from '@jupyterlite/kernel';
-import { EchoKernel } from './kernel';
+import { EmbeddedKernel } from './kernel';
+import WelcomePanel from './panel';
+import { ServiceContainer } from './services/ServiceContainer';
 
-/**
- * Plugin configuration for the enhanced kernel
- */
-const enhancedKernel: JupyterLiteServerPlugin<void> = {
-  id: 'enhanced-kernel-plugin',
+// Kernel plugin for the embedded kernel
+const kernelPlugin: JupyterLiteServerPlugin<void> = {
+  id: 'jupyterlite-embedded-kernel:kernel',
   autoStart: true,
   requires: [IKernelSpecs],
   activate: (app: JupyterLiteServer, kernelspecs: IKernelSpecs) => {
-    const activeKernels = new Map<string, EchoKernel>();
+    const activeKernels = new Map<string, EmbeddedKernel>();
 
     app.router.post('/api/kernels/(.*)/interrupt', async (req, kernelId: string) => {
       const kernel = activeKernels.get(kernelId);
@@ -29,51 +29,31 @@ const enhancedKernel: JupyterLiteServerPlugin<void> = {
 
     kernelspecs.register({
       spec: {
-        name: 'enhanced',
-        display_name: 'Enhanced Kernel',
+        name: 'embedded',
+        display_name: 'Embedded Kernel',
         language: 'python',
         argv: [],
         resources: {
-          'logo-32x32': '',
-          'logo-64x64': '',
+          'logo-32x32': 'https://www.cdnlogo.com/logos/e/41/espressif-systems.svg',
+          'logo-64x64': 'https://www.cdnlogo.com/logos/e/41/espressif-systems.svg',
         },
       },
       create: async (options: IKernel.IOptions): Promise<IKernel> => {
-        const kernel = new EchoKernel(options);
-        activeKernels.set(kernel.id, kernel);
 
-        async function connectSerialPort() {
-          try {
-            const port = await navigator.serial.requestPort();
-            await port.open({ baudRate: 115200 });
-            //
-            await port.setSignals({ dataTerminalReady: false });
-            await new Promise((resolve) => setTimeout(resolve, 200));
-            await port.setSignals({ dataTerminalReady: true });
-            //
-            // await port.open({ baudRate: 115200 });
+        const serviceContainer = new ServiceContainer()
 
-            const reader = port.readable?.getReader();
-            const writer = port.writable?.getWriter();
+        const welcomePanel = new WelcomePanel(serviceContainer);
+        document.body.appendChild(welcomePanel.getElement());
+        const kernel = new EmbeddedKernel(options, serviceContainer);
 
-            kernel.reader = reader;
-            kernel.writer = writer;
-            kernel.port = port;
-          } catch (err) {
-            console.error('Serial Port Error:', err);
-          }
-        }
-        await connectSerialPort();
-        console.log('Creating enhanced kernel instance');
+        welcomePanel.show();
         await kernel.ready;
-        return kernel;
-      },
-    });
 
-    console.log('Enhanced kernel plugin activated');
-  },
+        activeKernels.set(kernel.id, kernel);
+        return kernel;
+      }
+    });
+  }
 };
 
-const plugins: JupyterLiteServerPlugin<any>[] = [enhancedKernel];
-
-export default plugins;
+export default [kernelPlugin];
