@@ -7,7 +7,7 @@ import { EchoKernel } from './kernel';
  * Plugin configuration for the enhanced kernel
  */
 const enhancedKernel: JupyterLiteServerPlugin<void> = {
-  id: 'enhanced-kernel-plugin',
+  id: 'jupyter-kernel-plugin',
   autoStart: true,
   requires: [IKernelSpecs],
   activate: (app: JupyterLiteServer, kernelspecs: IKernelSpecs) => {
