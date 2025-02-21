@@ -1,4 +1,6 @@
 import { JupyterLiteServer, JupyterLiteServerPlugin } from '@jupyterlite/server';
+import { JupyterFrontEnd, JupyterFrontEndPlugin } from '@jupyterlab/application';
+import { IStatusBar } from '@jupyterlab/statusbar';
 
 import { IKernel, IKernelSpecs } from '@jupyterlite/kernel';
 import { EchoKernel } from './kernel';
@@ -6,10 +8,22 @@ import { EchoKernel } from './kernel';
 import { ESPLoader, FlashOptions, LoaderOptions, Transport } from 'esptool-js';
 import * as CryptoJS from 'crypto-js';
 
+interface FirmwareFile {
+  name: string;
+  data: ArrayBuffer;
+}
+
+let selectedFirmware: FirmwareFile | null = null;
+
 /**
- * Loads firmware from a file
+ * Loads firmware either from file or uses default
  */
-async function loadFirmware(): Promise<{ name: string; data: ArrayBuffer }> {
+async function loadFirmware(): Promise<FirmwareFile> {
+  if (selectedFirmware) {
+    return selectedFirmware;
+  }
+  
+  // Load default firmware as fallback
   const firmwarePath = '/firmware/ESP32_GENERIC_C3-20241129-v1.24.1.bin';
   const response = await fetch(firmwarePath);
   if (!response.ok) {
@@ -116,6 +130,44 @@ const enhancedKernel: JupyterLiteServerPlugin<void> = {
   },
 };
 
-const plugins: JupyterLiteServerPlugin<any>[] = [enhancedKernel];
+/**
+ * Activates the Frontier status bar plugin
+ */
+function activateFrontier(
+  app: JupyterFrontEnd
+): IStatusBar {
+  const statusBar: IStatusBar = {
+    registerStatusItem: (id: string, statusItem: IStatusBar.IItem) => {
+      let _isDisposed = false;
+      return {
+        dispose: () => { 
+          _isDisposed = true;
+        },
+        get isDisposed(): boolean {
+          return _isDisposed;
+        }
+      };
+    }
+  };
+  return statusBar;
+}
 
-export default plugins;
+const userPlugin: JupyterFrontEndPlugin<IStatusBar> = {
+  id: "Frontier",
+  autoStart: true,
+  activate: activateFrontier,
+  provides: IStatusBar
+};
+
+/**
+ * A simple frontend plugin that activates with JupyterLab
+ */
+const frontendPlugin: JupyterFrontEndPlugin<void> = {
+  id: 'jupyterlite-embedded-kernel:frontend',
+  autoStart: true,
+  activate: (app: JupyterFrontEnd) => {
+    console.log('JupyterLab frontend plugin activated!');
+  }
+};
+
+export default [enhancedKernel, userPlugin, frontendPlugin];

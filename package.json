@@ -48,6 +48,7 @@
     "setup:py": "python -m pip install -e \".[dev,lint,test,docs]\""
   },
   "dependencies": {
+    "@jupyterlab/application": "^4.3.5",
     "@jupyterlab/coreutils": "^6.1.1",
     "@jupyterlite/contents": "^0.5.0-alpha.0",
     "@jupyterlite/kernel": "^0.5.0-alpha.0",
