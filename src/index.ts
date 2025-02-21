@@ -44,47 +44,44 @@ const enhancedKernel: JupyterLiteServerPlugin<void> = {
         const kernel = new EchoKernel(options);
         activeKernels.set(kernel.id, kernel);
 
-        async function connectSerialPort() {
-          try {
-            const firmwareUrl = 'https://micropython.org/resources/firmware/ESP32_GENERIC_C3-20241129-v1.24.1.bin';
-
-            const response = await fetch(firmwareUrl);
-            if (!response.ok) {
-              throw new Error(`Failed to fetch firmware: ${response.status} ${response.statusText}`);
-            }
-
-            const arrayBuffer = await response.arrayBuffer();
-
-            const device = await navigator.serial.requestPort();
-            const transport = new Transport(device, true);
-            let flashOptions = {
+        try {
+          // Request serial port access
+          const device = await navigator.serial.requestPort();
+          const transport = new Transport(device, true);
+          
+          // Initialize ESP loader
+          let loaderOptions = {
               transport,
               baudrate: 115600,
             } as LoaderOptions;
-            const esploader = new ESPLoader(flashOptions);
-            await esploader.main();
+          const esploader = new ESPLoader(loaderOptions);
+          await esploader.main();
+          
+          // Fetch and flash MicroPython firmware
+          const firmwareUrl = 'https://micropython.org/resources/firmware/ESP32_GENERIC_C3-20241129-v1.24.1.bin';
+          let flashOptions1: FlashOptions = {
+            fileArray: [{
+              data: arrayBuffer,
+              address: 0x0
+            }],
+            flashSize: "keep",
+            eraseAll: false,
+            compress: true,
+            reportProgress: (fileIndex, written, total) => {
+              console.log(total)
+              console.log(fileIndex)
+            },
+            calculateMD5Hash: (image) => CryptoJS.MD5(CryptoJS.enc.Latin1.parse(image)),
+          } as FlashOptions;
 
-            let flashOptions1: FlashOptions = {
-              fileArray: [{
-                data: arrayBuffer,
-                address: 0x0
-              }],
-              flashSize: "keep",
-              eraseAll: false,
-              compress: true,
-              reportProgress: (fileIndex, written, total) => {
-                console.log(total)
-                console.log(fileIndex)
-              },
-              calculateMD5Hash: (image) => CryptoJS.MD5(CryptoJS.enc.Latin1.parse(image)),
-            } as FlashOptions;
-            await esploader.writeFlash(flashOptions1);
-            kernel.device = esploader;
-          } catch (err) {
-            console.error('Serial Port Error:', err);
-          }
+          await esploader.writeFlash(flashOptions1);
+          kernel.device = esploader;
+          console.log('MicroPython successfully flashed');
+        } catch (err) {
+          console.error('Failed to initialize kernel:', err);
+          throw err;
         }
-        await connectSerialPort();
+
         console.log('Creating embedded kernel instance');
         await kernel.ready;
         return kernel;
