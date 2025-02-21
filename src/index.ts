@@ -5,6 +5,7 @@ import { EchoKernel } from './kernel';
 
 import { ESPLoader, FlashOptions, LoaderOptions, Transport } from 'esptool-js';
 import * as CryptoJS from 'crypto-js';
+import { MICROPYTHON_FIRMWARE } from './firmware';
 
 /**
  * Plugin configuration for the enhanced kernel
@@ -58,16 +59,9 @@ const enhancedKernel: JupyterLiteServerPlugin<void> = {
           const esploader = new ESPLoader(loaderOptions);
           await esploader.main();
           
-          // Fetch and flash MicroPython firmware
-          const firmwareUrl = 'https://micropython.org/resources/firmware/ESP32_GENERIC_C3-20241129-v1.24.1.bin';
-          const response = await fetch(firmwareUrl, {
-            mode: 'no-cors',
-          });
-          console.log(response)
-          if (!response.ok) {
-            throw new Error(`Failed to fetch firmware: ${response.status} ${response.statusText}`);
-          }
-          const arrayBuffer = await response.arrayBuffer();
+          // Use local firmware data
+          const arrayBuffer = MICROPYTHON_FIRMWARE.data;
+          console.log('Firmware size:', arrayBuffer.byteLength);
           
           // Convert ArrayBuffer to string
           const uint8Array = new Uint8Array(arrayBuffer);
@@ -84,8 +78,7 @@ const enhancedKernel: JupyterLiteServerPlugin<void> = {
             eraseAll: false,
             compress: true,
             reportProgress: (fileIndex, written, total) => {
-              console.log(total)
-              console.log(fileIndex)
+              console.log('Flash progress:', {fileIndex, written, total})
             },
             calculateMD5Hash: (image) => CryptoJS.MD5(CryptoJS.enc.Latin1.parse(image)).toString(),
           } as FlashOptions;
@@ -93,7 +86,6 @@ const enhancedKernel: JupyterLiteServerPlugin<void> = {
           await esploader.writeFlash(flashOptions1);
           kernel.device = esploader;
           console.log('MicroPython successfully flashed');
-
         } catch (err) {
           console.error('Failed to initialize kernel:', err);
           throw err;
