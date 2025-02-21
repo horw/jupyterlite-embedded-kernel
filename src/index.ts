@@ -16,10 +16,10 @@ class WelcomePanel extends Widget {
     this.buttonContainer = document.createElement('div');
     this.buttonContainer.style.cssText = `
       position: fixed;
-      top: 16px;
-      right: 16px;
-      width: 44px;
-      height: 44px;
+      bottom: 20px;
+      right: 20px;
+      width: 64px;
+      height: 64px;
       z-index: 999999999;
     `;
     document.body.appendChild(this.buttonContainer);
@@ -99,17 +99,17 @@ class WelcomePanel extends Widget {
 
       .minimized {
         position: fixed !important;
-        top: 16px !important;
-        right: 16px !important;
+        bottom: 20px !important;
+        right: 20px !important;
         transform: none !important;
         border-radius: 50% !important;
-        width: 44px !important;
-        height: 44px !important;
+        width: 64px !important;
+        height: 64px !important;
         padding: 0 !important;
         cursor: pointer;
         background: var(--ui-red) !important;
-        border: 2px solid rgba(255, 255, 255, 0.9) !important;
-        box-shadow: 0 2px 12px rgba(231, 19, 45, 0.3) !important;
+        border: 3px solid rgba(255, 255, 255, 0.9) !important;
+        box-shadow: 0 4px 16px rgba(231, 19, 45, 0.3) !important;
         z-index: 999999999 !important;
         transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
         animation: float 2s infinite ease-in-out;
@@ -133,7 +133,7 @@ class WelcomePanel extends Widget {
 
       .minimized:hover {
         transform: scale(1.15) !important;
-        box-shadow: 0 4px 20px rgba(231, 19, 45, 0.4) !important;
+        box-shadow: 0 6px 24px rgba(231, 19, 45, 0.4) !important;
         border-color: white !important;
       }
 
@@ -408,37 +408,53 @@ class WelcomePanel extends Widget {
     overlay.appendChild(container);
 
     // Create a container for the minimized button that will always be on top
+    // Create Espressif logo using direct URL
+    const espressifLogo = `
+      <img src="https://www.cdnlogo.com/logos/e/41/espressif-systems.svg" 
+           alt="Espressif Logo"
+           style="width: 100%; height: 100%; object-fit: contain; filter: brightness(0) invert(1);">
+    `;
+
     // Create the circle button
     const circleButton = document.createElement('button');
     circleButton.className = 'minimized-button';
-    circleButton.innerHTML = '⚡️';
+    circleButton.innerHTML = espressifLogo;
     circleButton.style.cssText = `
       width: 100%;
       height: 100%;
       border-radius: 50%;
-      border: 2px solid rgba(255, 255, 255, 0.9);
+      border: 3px solid rgba(255, 255, 255, 0.9);
       background: var(--ui-red);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
-      box-shadow: 0 2px 12px rgba(231, 19, 45, 0.3);
+      padding: 1px;
+      box-shadow: 0 4px 16px rgba(231, 19, 45, 0.3);
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       animation: float 2s infinite ease-in-out;
+      overflow: hidden;
     `;
-    
-    // Add hover and click effects
+
+    // Add hover and click effects with logo rotation
     circleButton.addEventListener('mouseover', () => {
       circleButton.style.transform = 'scale(1.15)';
-      circleButton.style.boxShadow = '0 4px 20px rgba(231, 19, 45, 0.4)';
+      circleButton.style.boxShadow = '0 6px 24px rgba(231, 19, 45, 0.4)';
       circleButton.style.borderColor = 'white';
+      const img = circleButton.querySelector('img');
+      if (img) {
+        img.style.transform = 'rotate(180deg)';
+      }
     });
     
     circleButton.addEventListener('mouseout', () => {
       circleButton.style.transform = 'none';
-      circleButton.style.boxShadow = '0 2px 12px rgba(231, 19, 45, 0.3)';
+      circleButton.style.boxShadow = '0 4px 16px rgba(231, 19, 45, 0.3)';
       circleButton.style.borderColor = 'rgba(255, 255, 255, 0.9)';
+      const img = circleButton.querySelector('img');
+      if (img) {
+        img.style.transform = 'none';
+      }
     });
     
     circleButton.addEventListener('mousedown', () => {
@@ -452,7 +468,24 @@ class WelcomePanel extends Widget {
     circleButton.addEventListener('click', () => {
       this.show();
     });
-    
+
+    // Add SVG transition styles
+    const svgStyle = document.createElement('style');
+    svgStyle.textContent += `
+      .minimized-button img {
+        width: 100%;
+        height: 100%;
+        transition: transform 0.3s ease;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+      }
+      
+      @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-6px); }
+      }
+    `;
+    document.head.appendChild(svgStyle);
+
     this.buttonContainer.appendChild(circleButton);
     document.body.appendChild(this.buttonContainer);
 
@@ -485,6 +518,8 @@ class WelcomePanel extends Widget {
       this.removeClass('visible');
       this.removeClass('minimizing');
       this.buttonContainer.style.display = 'block';
+      this.buttonContainer.style.bottom = '20px';
+      this.buttonContainer.style.right = '20px';
     }, 400);
   }
 }
