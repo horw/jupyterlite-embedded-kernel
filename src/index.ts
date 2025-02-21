@@ -1,11 +1,154 @@
 import { JupyterLiteServer, JupyterLiteServerPlugin } from '@jupyterlite/server';
 import { JupyterFrontEnd, JupyterFrontEndPlugin } from '@jupyterlab/application';
 import { IStatusBar } from '@jupyterlab/statusbar';
-import { ToolbarButton, Dialog, showDialog } from '@jupyterlab/apputils';
 import { Widget } from '@lumino/widgets';
+import { ToolbarButton } from '@jupyterlab/apputils';
 
 import { IKernel, IKernelSpecs } from '@jupyterlite/kernel';
 import { EchoKernel } from './kernel';
+
+// Create WelcomePanel class outside the plugin
+class WelcomePanel extends Widget {
+  constructor(kernel: IKernel) {
+    super();
+    this.id = 'kernel-welcome-panel';
+    this.addClass('jp-kernel-welcome-panel');
+    this.initUI(kernel);
+  }
+
+  private initUI(kernel: IKernel): void {
+    const container = document.createElement('div');
+    container.style.cssText = `
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--jp-layout-color0);
+    `;
+
+    const content = document.createElement('div');
+    content.style.cssText = `
+      padding: 2rem;
+      max-width: 900px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    `;
+
+    const header = document.createElement('div');
+    header.innerHTML = `
+      <h1 style="
+        margin: 0;
+        font-size: 2.5rem;
+        color: var(--jp-ui-font-color0);
+        text-align: center;
+        font-weight: 600;
+      ">Welcome to Embedded Kernel</h1>
+      <p style="
+        margin: 1rem 0;
+        color: var(--jp-ui-font-color2);
+        text-align: center;
+        font-size: 1.2rem;
+      ">Choose an action to get started with your embedded development</p>
+    `;
+
+    const optionsContainer = document.createElement('div');
+    optionsContainer.style.cssText = `
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      padding: 1rem;
+    `;
+
+    const options = [
+      {
+        action: 'flash',
+        icon: '🔧',
+        title: 'Flash Device',
+        description: 'Upload firmware to your device'
+      },
+      {
+        action: 'notebook',
+        icon: '📓',
+        title: 'Open Notebook',
+        description: 'Start working with your device'
+      },
+      {
+        action: 'help',
+        icon: '❓',
+        title: 'Show Help',
+        description: 'Learn more about embedded development'
+      }
+    ];
+
+    options.forEach(({ action, icon, title, description }) => {
+      const card = document.createElement('div');
+      card.className = 'welcome-card';
+      card.innerHTML = `
+        <span style="font-size: 2.5rem;">${icon}</span>
+        <h3 style="margin: 0.5rem 0; font-size: 1.4rem;">${title}</h3>
+        <p style="margin: 0; color: var(--jp-ui-font-color2);">${description}</p>
+      `;
+      card.style.cssText = `
+        background: var(--jp-layout-color1);
+        border: 2px solid var(--jp-border-color1);
+        border-radius: 12px;
+        padding: 2rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        min-height: 200px;
+        color: var(--jp-ui-font-color0);
+        font-family: var(--jp-ui-font-family);
+      `;
+
+      card.addEventListener('mouseover', () => {
+        card.style.transform = 'translateY(-5px)';
+        card.style.borderColor = '#ff3b30';
+        card.style.boxShadow = '0 8px 24px rgba(255, 59, 48, 0.2)';
+      });
+
+      card.addEventListener('mouseout', () => {
+        card.style.transform = '';
+        card.style.borderColor = '';
+        card.style.boxShadow = '';
+      });
+
+      card.addEventListener('click', async () => {
+        switch (action) {
+          case 'flash':
+            try {
+              const device = await navigator.serial.requestPort();
+              console.log('Device selected for flashing:', device);
+            } catch (err) {
+              console.error('Failed to get serial port:', err);
+            }
+            break;
+          case 'notebook':
+            // Handle notebook creation
+            console.log('Creating new notebook...');
+            break;
+          case 'help':
+            // Open help documentation
+            console.log('Opening help documentation...');
+            break;
+        }
+      });
+
+      optionsContainer.appendChild(card);
+    });
+
+    content.appendChild(header);
+    content.appendChild(optionsContainer);
+    container.appendChild(content);
+    this.node.appendChild(container);
+  }
+}
 
 /**
  * Plugin configuration for the enhanced kernel
@@ -77,123 +220,10 @@ const enhancedKernel: JupyterLiteServerPlugin<void> = {
       create: async (options: IKernel.IOptions): Promise<IKernel> => {
         const kernel = new EchoKernel(options);
         
-        // Create custom dialog body with buttons
-        class CustomDialogBody extends Widget {
-          constructor(private readonly onAction: (action: string) => void) {
-            super();
-            this.addClass('jp-Dialog-body');
-            
-            const container = document.createElement('div');
-            container.style.cssText = `
-              padding: 2rem;
-              min-width: 600px;
-              min-height: 400px;
-              display: flex;
-              flex-direction: column;
-              gap: 2rem;
-            `;
-
-            const header = document.createElement('div');
-
-            const optionsContainer = document.createElement('div');
-            optionsContainer.style.cssText = `
-              display: grid;
-              grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-              gap: 1.5rem;
-              padding: 1rem;
-            `;
-
-            const options = [
-              {
-                action: 'flash',
-                icon: '🔧',
-                title: 'Flash Device',
-                description: 'Upload firmware to your device'
-              },
-              {
-                action: 'notebook',
-                icon: '📓',
-                title: 'Open Notebook',
-                description: 'Start working with your device'
-              },
-              {
-                action: 'help',
-                icon: '❓',
-                title: 'Show Help',
-                description: 'Learn more about embedded development'
-              }
-            ];
-
-            options.forEach(({ action, icon, title, description }) => {
-              const button = document.createElement('button');
-              button.className = 'option-button';
-              button.dataset.action = action;
-              button.innerHTML = `
-                <span style="font-size: 2rem;">${icon}</span>
-                <h3 style="margin: 0.5rem 0; font-size: 1.3rem;">${title}</h3>
-                <p style="margin: 0; color: var(--jp-ui-font-color2);">${description}</p>
-              `;
-              button.style.cssText = `
-                background: var(--jp-layout-color1);
-                border: 2px solid var(--jp-border-color1);
-                border-radius: 12px;
-                padding: 1.5rem;
-                cursor: pointer;
-                transition: all 0.3s ease;
-                position: relative;
-                overflow: hidden;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                text-align: center;
-                width: 100%;
-                height: 100%;
-                min-height: 180px;
-                color: var(--jp-ui-font-color0);
-                font-family: var(--jp-ui-font-family);
-              `;
-
-              optionsContainer.appendChild(button);
-            });
-
-            // Add hover effects
-            container.querySelectorAll('.option-button').forEach(button => {
-              button.addEventListener('mouseover', () => {
-                (button as HTMLElement).style.transform = 'translateY(-5px)';
-                (button as HTMLElement).style.borderColor = '#ff3b30';
-                (button as HTMLElement).style.boxShadow = '0 8px 24px rgba(255, 59, 48, 0.2)';
-              });
-
-              button.addEventListener('mouseout', () => {
-                (button as HTMLElement).style.transform = '';
-                (button as HTMLElement).style.borderColor = '';
-                (button as HTMLElement).style.boxShadow = '';
-              });
-
-              button.addEventListener('click', () => {
-                const action = (button as HTMLElement).dataset.action;
-                if (action) {
-                  this.onAction(action);
-                  Dialog.flush();
-                }
-              });
-            });
-
-            container.appendChild(header);
-            container.appendChild(optionsContainer);
-            this.node.appendChild(container);
-          }
-        }
-
-        // Show the custom dialog and handle the action
-        showDialog({
-          title: 'Embedded Kernel Options',
-          body: new CustomDialogBody((action: string) => {
-            handleKernelAction(action, kernel);
-          }),
-          buttons: [] // We're using custom buttons in the body
-        });
-
+        // Create custom welcome panel
+        const welcomePanel = new WelcomePanel(kernel);
+        app.shell.add(welcomePanel, 'main', { mode: 'split-right' });
+        
         await kernel.ready;
         return kernel;
       },
