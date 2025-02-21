@@ -5,15 +5,30 @@ import { EchoKernel } from './kernel';
 
 // Create WelcomePanel class outside the plugin
 class WelcomePanel extends Widget {
+  private buttonContainer: HTMLElement;
+
   constructor() {
     super();
     this.id = 'kernel-welcome-panel';
     this.addClass('jp-kernel-welcome-panel');
+    
+    // Initialize buttonContainer
+    this.buttonContainer = document.createElement('div');
+    this.buttonContainer.style.cssText = `
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      width: 44px;
+      height: 44px;
+      z-index: 999999999;
+    `;
+    document.body.appendChild(this.buttonContainer);
+    
     this.initUI();
   }
 
   private initUI(): void {
-    // Add global styles
+    // Add global styles including animation
     const style = document.createElement('style');
     style.textContent = `
       :root {
@@ -30,13 +45,9 @@ class WelcomePanel extends Widget {
         --ui-shadow-lg: 0 20px 40px rgba(28, 28, 40, 0.16);
       }
 
-      .jp-kernel-welcome-panel {
-        display: none;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      }
-
-      .jp-kernel-welcome-panel.visible {
-        display: block;
+      @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-4px); }
       }
 
       .welcome-overlay {
@@ -59,18 +70,13 @@ class WelcomePanel extends Widget {
       }
 
       .welcome-dialog {
+        will-change: transform, width, height, border-radius;
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         position: fixed;
         top: 50%;
         left: 50%;
-        transform: translate(-50%, -56%);
+        transform: translate(-50%, -60%);
         opacity: 0;
-        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        background: var(--ui-white);
-        border-radius: 24px;
-        box-shadow: var(--ui-shadow-lg),
-                    0 0 0 1px rgba(28, 28, 40, 0.04);
-        width: 380px;
-        padding: 2rem;
       }
 
       .jp-kernel-welcome-panel.visible .welcome-dialog {
@@ -78,13 +84,61 @@ class WelcomePanel extends Widget {
         opacity: 1;
       }
 
-      .jp-kernel-welcome-panel.hiding .welcome-overlay {
+      .jp-kernel-welcome-panel.minimizing .welcome-overlay {
         opacity: 0;
       }
 
-      .jp-kernel-welcome-panel.hiding .welcome-dialog {
-        opacity: 0;
-        transform: translate(-50%, -44%);
+      .jp-kernel-welcome-panel.minimizing .welcome-dialog {
+        transform: translate(calc(100% - 60px), -20px) scale(0.2);
+        border-radius: 50%;
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        opacity: 1;
+      }
+
+      .minimized {
+        position: fixed !important;
+        top: 16px !important;
+        right: 16px !important;
+        transform: none !important;
+        border-radius: 50% !important;
+        width: 44px !important;
+        height: 44px !important;
+        padding: 0 !important;
+        cursor: pointer;
+        background: var(--ui-red) !important;
+        border: 2px solid rgba(255, 255, 255, 0.9) !important;
+        box-shadow: 0 2px 12px rgba(231, 19, 45, 0.3) !important;
+        z-index: 999999999 !important;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        animation: float 2s infinite ease-in-out;
+      }
+
+      .minimized * {
+        opacity: 0 !important;
+        transition: opacity 0.2s ease;
+      }
+
+      .minimized::after {
+        content: '⚡️';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 20px;
+        opacity: 1 !important;
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+      }
+
+      .minimized:hover {
+        transform: scale(1.15) !important;
+        box-shadow: 0 4px 20px rgba(231, 19, 45, 0.4) !important;
+        border-color: white !important;
+      }
+
+      .minimized:active {
+        transform: scale(0.95) !important;
       }
 
       .welcome-card {
@@ -352,6 +406,56 @@ class WelcomePanel extends Widget {
     container.appendChild(header);
     container.appendChild(optionsContainer);
     overlay.appendChild(container);
+
+    // Create a container for the minimized button that will always be on top
+    // Create the circle button
+    const circleButton = document.createElement('button');
+    circleButton.className = 'minimized-button';
+    circleButton.innerHTML = '⚡️';
+    circleButton.style.cssText = `
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.9);
+      background: var(--ui-red);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 2px 12px rgba(231, 19, 45, 0.3);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      animation: float 2s infinite ease-in-out;
+    `;
+    
+    // Add hover and click effects
+    circleButton.addEventListener('mouseover', () => {
+      circleButton.style.transform = 'scale(1.15)';
+      circleButton.style.boxShadow = '0 4px 20px rgba(231, 19, 45, 0.4)';
+      circleButton.style.borderColor = 'white';
+    });
+    
+    circleButton.addEventListener('mouseout', () => {
+      circleButton.style.transform = 'none';
+      circleButton.style.boxShadow = '0 2px 12px rgba(231, 19, 45, 0.3)';
+      circleButton.style.borderColor = 'rgba(255, 255, 255, 0.9)';
+    });
+    
+    circleButton.addEventListener('mousedown', () => {
+      circleButton.style.transform = 'scale(0.95)';
+    });
+    
+    circleButton.addEventListener('mouseup', () => {
+      circleButton.style.transform = 'scale(1.15)';
+    });
+    
+    circleButton.addEventListener('click', () => {
+      this.show();
+    });
+    
+    this.buttonContainer.appendChild(circleButton);
+    document.body.appendChild(this.buttonContainer);
+
     this.node.appendChild(overlay);
 
     // Add keyboard shortcut
@@ -360,18 +464,28 @@ class WelcomePanel extends Widget {
         this.hide();
       }
     });
+
+    // Add click handler for minimized state
+    container.addEventListener('click', (e) => {
+      if (container.classList.contains('minimized')) {
+        this.show();
+      }
+    });
   }
 
   show(): void {
+    this.buttonContainer.style.display = 'none';
     this.addClass('visible');
   }
 
   hide(): void {
-    this.addClass('hiding');
+    this.addClass('minimizing');
+    // First animate to the corner
     setTimeout(() => {
       this.removeClass('visible');
-      this.removeClass('hiding');
-    }, 400); // Match the transition duration
+      this.removeClass('minimizing');
+      this.buttonContainer.style.display = 'block';
+    }, 400);
   }
 }
 
