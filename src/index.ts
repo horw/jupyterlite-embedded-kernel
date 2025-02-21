@@ -1,11 +1,9 @@
-import { JupyterFrontEnd, JupyterFrontEndPlugin } from '@jupyterlab/application';
 import { Widget } from '@lumino/widgets';
 import { JupyterLiteServer, JupyterLiteServerPlugin } from '@jupyterlite/server';
 import { IKernel, IKernelSpecs } from '@jupyterlite/kernel';
 import { EchoKernel } from './kernel';
 
 // Constants
-const PLUGIN_ID = 'jupyterlite-embedded-kernel:frontend';
 
 // Create WelcomePanel class outside the plugin
 class WelcomePanel extends Widget {
@@ -151,21 +149,6 @@ class WelcomePanel extends Widget {
   }
 }
 
-// Frontend plugin for the welcome panel
-const frontendPlugin: JupyterFrontEndPlugin<void> = {
-  id: PLUGIN_ID,
-  autoStart: true,
-  activate: (app: JupyterFrontEnd) => {
-    console.log('Activating embedded kernel frontend plugin...');
-
-    // Create welcome panel
-    const welcomePanel = new WelcomePanel();
-
-    // Attach directly to document body
-    Widget.attach(welcomePanel, document.body);
-  }
-};
-
 // Kernel plugin for the embedded kernel
 const kernelPlugin: JupyterLiteServerPlugin<void> = {
   id: 'jupyterlite-embedded-kernel:kernel',
@@ -182,6 +165,11 @@ const kernelPlugin: JupyterLiteServerPlugin<void> = {
       },
       create: async (options: IKernel.IOptions): Promise<IKernel> => {
         const kernel = new EchoKernel(options);
+        // Create welcome panel
+        const welcomePanel = new WelcomePanel();
+
+        // Attach directly to document body
+        Widget.attach(welcomePanel, document.body);
         await kernel.ready;
         return kernel;
       }
@@ -189,4 +177,4 @@ const kernelPlugin: JupyterLiteServerPlugin<void> = {
   }
 };
 
-export default [frontendPlugin, kernelPlugin];
+export default [ kernelPlugin];
