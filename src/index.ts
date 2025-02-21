@@ -4,6 +4,7 @@ import { IKernel, IKernelSpecs } from '@jupyterlite/kernel';
 import { EchoKernel } from './kernel';
 
 import { ESPLoader, FlashOptions, LoaderOptions, Transport } from 'esptool-js';
+import * as CryptoJS from 'crypto-js';
 
 /**
  * Plugin configuration for the enhanced kernel
@@ -59,9 +60,21 @@ const enhancedKernel: JupyterLiteServerPlugin<void> = {
           
           // Fetch and flash MicroPython firmware
           const firmwareUrl = 'https://micropython.org/resources/firmware/ESP32_GENERIC_C3-20241129-v1.24.1.bin';
+          const response = await fetch(firmwareUrl);
+          if (!response.ok) {
+            throw new Error(`Failed to fetch firmware: ${response.status} ${response.statusText}`);
+          }
+          const arrayBuffer = await response.arrayBuffer();
+          
+          // Convert ArrayBuffer to string
+          const uint8Array = new Uint8Array(arrayBuffer);
+          const firmwareString = Array.from(uint8Array)
+            .map(byte => String.fromCharCode(byte))
+            .join('');
+
           let flashOptions1: FlashOptions = {
             fileArray: [{
-              data: arrayBuffer,
+              data: firmwareString,
               address: 0x0
             }],
             flashSize: "keep",
@@ -71,12 +84,13 @@ const enhancedKernel: JupyterLiteServerPlugin<void> = {
               console.log(total)
               console.log(fileIndex)
             },
-            calculateMD5Hash: (image) => CryptoJS.MD5(CryptoJS.enc.Latin1.parse(image)),
+            calculateMD5Hash: (image) => CryptoJS.MD5(CryptoJS.enc.Latin1.parse(image)).toString(),
           } as FlashOptions;
 
           await esploader.writeFlash(flashOptions1);
           kernel.device = esploader;
           console.log('MicroPython successfully flashed');
+
         } catch (err) {
           console.error('Failed to initialize kernel:', err);
           throw err;
