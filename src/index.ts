@@ -24,8 +24,6 @@ const enhancedKernel: JupyterLiteServerPlugin<void> = {
           try {
             const device = await navigator.serial.requestPort();
             console.log('Device selected for flashing:', device);
-            // Add your flashing logic here
-            // You can access kernel.device or other properties as needed
           } catch (err) {
             console.error('Failed to get serial port:', err);
           }
@@ -86,38 +84,94 @@ const enhancedKernel: JupyterLiteServerPlugin<void> = {
             this.addClass('jp-Dialog-body');
             
             const container = document.createElement('div');
-            container.style.padding = '20px';
-            container.innerHTML = `
-              <div style="text-align: center; margin-bottom: 20px;">
-                <h2 style="margin-bottom: 15px;">Welcome to Embedded Kernel!</h2>
-                <p style="font-size: 16px;">Please choose an option to continue:</p>
-              </div>
-              <div style="display: flex; flex-direction: column; gap: 10px;">
-                <button class="jp-Dialog-button jp-mod-accept jp-mod-styled" data-action="flash">
-                  🔌 Flash Device
-                  <span style="display: block; font-size: 12px; color: #666;">
-                    Connect and flash your device with firmware
-                  </span>
-                </button>
-                <button class="jp-Dialog-button jp-mod-accept jp-mod-styled" data-action="notebook">
-                  📓 Open Notebook
-                  <span style="display: block; font-size: 12px; color: #666;">
-                    Start coding with a new notebook
-                  </span>
-                </button>
-                <button class="jp-Dialog-button jp-mod-accept jp-mod-styled" data-action="help">
-                  ❓ Show Help
-                  <span style="display: block; font-size: 12px; color: #666;">
-                    View documentation and examples
-                  </span>
-                </button>
-              </div>
+            container.style.cssText = `
+              padding: 2rem;
+              min-width: 600px;
+              min-height: 400px;
+              display: flex;
+              flex-direction: column;
+              gap: 2rem;
             `;
 
-            // Add click handlers
-            container.querySelectorAll('button').forEach(button => {
-              button.addEventListener('click', (e) => {
-                const action = (e.currentTarget as HTMLElement).dataset.action;
+            const header = document.createElement('div');
+
+            const optionsContainer = document.createElement('div');
+            optionsContainer.style.cssText = `
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+              gap: 1.5rem;
+              padding: 1rem;
+            `;
+
+            const options = [
+              {
+                action: 'flash',
+                icon: '🔧',
+                title: 'Flash Device',
+                description: 'Upload firmware to your device'
+              },
+              {
+                action: 'notebook',
+                icon: '📓',
+                title: 'Open Notebook',
+                description: 'Start working with your device'
+              },
+              {
+                action: 'help',
+                icon: '❓',
+                title: 'Show Help',
+                description: 'Learn more about embedded development'
+              }
+            ];
+
+            options.forEach(({ action, icon, title, description }) => {
+              const button = document.createElement('button');
+              button.className = 'option-button';
+              button.dataset.action = action;
+              button.innerHTML = `
+                <span style="font-size: 2rem;">${icon}</span>
+                <h3 style="margin: 0.5rem 0; font-size: 1.3rem;">${title}</h3>
+                <p style="margin: 0; color: var(--jp-ui-font-color2);">${description}</p>
+              `;
+              button.style.cssText = `
+                background: var(--jp-layout-color1);
+                border: 2px solid var(--jp-border-color1);
+                border-radius: 12px;
+                padding: 1.5rem;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                position: relative;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                width: 100%;
+                height: 100%;
+                min-height: 180px;
+                color: var(--jp-ui-font-color0);
+                font-family: var(--jp-ui-font-family);
+              `;
+
+              optionsContainer.appendChild(button);
+            });
+
+            // Add hover effects
+            container.querySelectorAll('.option-button').forEach(button => {
+              button.addEventListener('mouseover', () => {
+                (button as HTMLElement).style.transform = 'translateY(-5px)';
+                (button as HTMLElement).style.borderColor = '#ff3b30';
+                (button as HTMLElement).style.boxShadow = '0 8px 24px rgba(255, 59, 48, 0.2)';
+              });
+
+              button.addEventListener('mouseout', () => {
+                (button as HTMLElement).style.transform = '';
+                (button as HTMLElement).style.borderColor = '';
+                (button as HTMLElement).style.boxShadow = '';
+              });
+
+              button.addEventListener('click', () => {
+                const action = (button as HTMLElement).dataset.action;
                 if (action) {
                   this.onAction(action);
                   Dialog.flush();
@@ -125,6 +179,8 @@ const enhancedKernel: JupyterLiteServerPlugin<void> = {
               });
             });
 
+            container.appendChild(header);
+            container.appendChild(optionsContainer);
             this.node.appendChild(container);
           }
         }
