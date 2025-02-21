@@ -160,38 +160,6 @@ const enhancedKernel: JupyterLiteServerPlugin<void> = {
   activate: (app: JupyterLiteServer, kernelspecs: IKernelSpecs) => {
     const activeKernels = new Map<string, EchoKernel>();
 
-    // Function to handle different actions
-    async function handleKernelAction(action: string, kernel: EchoKernel): Promise<void> {
-      switch(action) {
-        case 'flash':
-          try {
-            const device = await navigator.serial.requestPort();
-            console.log('Device selected for flashing:', device);
-          } catch (err) {
-            console.error('Failed to get serial port:', err);
-          }
-          break;
-        
-        case 'notebook':
-          try {
-            console.log('Creating new notebook with kernel:', kernel.id);
-            // Add your notebook creation logic here
-          } catch (err) {
-            console.error('Failed to create notebook:', err);
-          }
-          break;
-        
-        case 'help':
-          try {
-            console.log('Opening help documentation');
-            window.open('https://github.com/your-repo/docs', '_blank');
-          } catch (err) {
-            console.error('Failed to open help:', err);
-          }
-          break;
-      }
-    }
-
     app.router.post('/api/kernels/(.*)/interrupt', async (req, kernelId: string) => {
       const kernel = activeKernels.get(kernelId);
       if (kernel) {
