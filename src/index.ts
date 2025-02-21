@@ -4,6 +4,9 @@ import { JupyterLiteServer, JupyterLiteServerPlugin } from '@jupyterlite/server'
 import { IKernel, IKernelSpecs } from '@jupyterlite/kernel';
 import { EchoKernel } from './kernel';
 
+// Constants
+const PLUGIN_ID = 'jupyterlite-embedded-kernel:frontend';
+
 // Create WelcomePanel class outside the plugin
 class WelcomePanel extends Widget {
   constructor() {
@@ -22,6 +25,7 @@ class WelcomePanel extends Widget {
       align-items: center;
       justify-content: center;
       background: var(--jp-layout-color0);
+      z-index: 1000;
     `;
 
     const content = document.createElement('div');
@@ -149,31 +153,16 @@ class WelcomePanel extends Widget {
 
 // Frontend plugin for the welcome panel
 const frontendPlugin: JupyterFrontEndPlugin<void> = {
-  id: 'jupyterlite-embedded-kernel:frontend',
+  id: PLUGIN_ID,
   autoStart: true,
-  activate: async (app: JupyterFrontEnd) => {
-    console.log('Activating frontend plugin...');
-    
-    // Wait for app to be ready
-    // await app.started;
-    
+  activate: (app: JupyterFrontEnd) => {
+    console.log('Activating embedded kernel frontend plugin...');
+
     // Create welcome panel
     const welcomePanel = new WelcomePanel();
-    
-    try {
-      if (!app.shell) {
-        throw new Error('Application shell is not available');
-      }
-      
-      // Add panel to the main area
-      app.shell.add(welcomePanel, 'center');
-      console.log('Welcome panel added successfully');
-      
-      // Activate the panel
-      app.shell.activateById(welcomePanel.id);
-    } catch (error) {
-      console.error('Failed to add welcome panel:', error);
-    }
+
+    // Attach directly to document body
+    Widget.attach(welcomePanel, document.body);
   }
 };
 
