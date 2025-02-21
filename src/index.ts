@@ -60,7 +60,10 @@ const enhancedKernel: JupyterLiteServerPlugin<void> = {
           
           // Fetch and flash MicroPython firmware
           const firmwareUrl = 'https://micropython.org/resources/firmware/ESP32_GENERIC_C3-20241129-v1.24.1.bin';
-          const response = await fetch(firmwareUrl);
+          const response = await fetch(firmwareUrl, {
+            mode: 'no-cors',
+          });
+          console.log(response)
           if (!response.ok) {
             throw new Error(`Failed to fetch firmware: ${response.status} ${response.statusText}`);
           }
