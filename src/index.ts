@@ -429,7 +429,8 @@ class WelcomePanel extends Widget {
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 1px;
+      padding: 4px;
+      padding-top: 6px;
       box-shadow: 0 4px 16px rgba(231, 19, 45, 0.3);
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       animation: float 2s infinite ease-in-out;
@@ -443,7 +444,7 @@ class WelcomePanel extends Widget {
       circleButton.style.borderColor = 'white';
       const img = circleButton.querySelector('img');
       if (img) {
-        img.style.transform = 'rotate(180deg)';
+        img.style.transform = 'rotate(30deg)';
       }
     });
     
