@@ -5,7 +5,22 @@ import { EchoKernel } from './kernel';
 
 import { ESPLoader, FlashOptions, LoaderOptions, Transport } from 'esptool-js';
 import * as CryptoJS from 'crypto-js';
-import { MICROPYTHON_FIRMWARE } from './firmware';
+
+/**
+ * Loads firmware from a file
+ */
+async function loadFirmware(): Promise<{ name: string; data: ArrayBuffer }> {
+  const firmwarePath = '/firmware/ESP32_GENERIC_C3-20241129-v1.24.1.bin';
+  const response = await fetch(firmwarePath);
+  if (!response.ok) {
+    throw new Error(`Failed to load firmware: ${response.statusText}`);
+  }
+  const data = await response.arrayBuffer();
+  return {
+    name: 'ESP32_GENERIC_C3-20241129-v1.24.1.bin',
+    data
+  };
+}
 
 /**
  * Plugin configuration for the enhanced kernel
@@ -59,12 +74,12 @@ const enhancedKernel: JupyterLiteServerPlugin<void> = {
           const esploader = new ESPLoader(loaderOptions);
           await esploader.main();
           
-          // Use local firmware data
-          const arrayBuffer = MICROPYTHON_FIRMWARE.data;
-          console.log('Firmware size:', arrayBuffer.byteLength);
+          // Load firmware from file
+          const firmware = await loadFirmware();
+          console.log('Firmware size:', firmware.data.byteLength);
           
           // Convert ArrayBuffer to string
-          const uint8Array = new Uint8Array(arrayBuffer);
+          const uint8Array = new Uint8Array(firmware.data);
           const firmwareString = Array.from(uint8Array)
             .map(byte => String.fromCharCode(byte))
             .join('');
