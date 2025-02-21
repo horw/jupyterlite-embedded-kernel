@@ -1,22 +1,19 @@
-import { JupyterLiteServer, JupyterLiteServerPlugin } from '@jupyterlite/server';
 import { JupyterFrontEnd, JupyterFrontEndPlugin } from '@jupyterlab/application';
-import { IStatusBar } from '@jupyterlab/statusbar';
 import { Widget } from '@lumino/widgets';
-import { ToolbarButton } from '@jupyterlab/apputils';
-
+import { JupyterLiteServer, JupyterLiteServerPlugin } from '@jupyterlite/server';
 import { IKernel, IKernelSpecs } from '@jupyterlite/kernel';
 import { EchoKernel } from './kernel';
 
 // Create WelcomePanel class outside the plugin
 class WelcomePanel extends Widget {
-  constructor(kernel: IKernel) {
+  constructor() {
     super();
     this.id = 'kernel-welcome-panel';
     this.addClass('jp-kernel-welcome-panel');
-    this.initUI(kernel);
+    this.initUI();
   }
 
-  private initUI(kernel: IKernel): void {
+  private initUI(): void {
     const container = document.createElement('div');
     container.style.cssText = `
       width: 100%;
@@ -150,153 +147,57 @@ class WelcomePanel extends Widget {
   }
 }
 
-/**
- * Plugin configuration for the enhanced kernel
- */
-const enhancedKernel: JupyterLiteServerPlugin<void> = {
-  id: 'jupyter-kernel-plugin',
-  autoStart: true,
-  requires: [IKernelSpecs],
-  activate: (app: JupyterLiteServer, kernelspecs: IKernelSpecs) => {
-    const activeKernels = new Map<string, EchoKernel>();
-
-    app.router.post('/api/kernels/(.*)/interrupt', async (req, kernelId: string) => {
-      const kernel = activeKernels.get(kernelId);
-      if (kernel) {
-        try {
-          await kernel.interrupt();
-          return new Response(null, { status: 204 });
-        } catch (error) {
-          console.error('Failed to interrupt kernel:', error);
-          return new Response('Failed to interrupt kernel', { status: 500 });
-        }
-      }
-      return new Response('Kernel not found', { status: 404 });
-    });
-
-    kernelspecs.register({
-      spec: {
-        name: 'embedded',
-        display_name: 'Embedded Kernel',
-        language: 'python',
-        argv: [],
-        resources: {
-          'logo-32x32': 'https://www.cdnlogo.com/logos/e/41/espressif-systems.svg',
-          'logo-64x64': 'https://www.cdnlogo.com/logos/e/41/espressif-systems.svg',
-        },
-      },
-      create: async (options: IKernel.IOptions): Promise<IKernel> => {
-        const kernel = new EchoKernel(options);
-        
-        // Create custom welcome panel
-        const welcomePanel = new WelcomePanel(kernel);
-        app.shell.add(welcomePanel, 'main', { mode: 'split-right' });
-        
-        await kernel.ready;
-        return kernel;
-      },
-    });
-
-    console.log('Embedded kernel plugin activated');
-  },
-};
-
-/**
- * Activates the Frontier status bar plugin
- */
-function activateFrontier(
-  app: JupyterFrontEnd
-): IStatusBar {
-  // Create a status bar item widget
-  class FrontierStatus extends Widget {
-    constructor() {
-      super();
-      this.addClass('jp-Frontier-StatusItem');
-      
-      // Add custom styles
-      const style = document.createElement('style');
-      style.textContent = `
-        .jp-Frontier-StatusItem {
-          display: flex;
-          align-items: center;
-          padding: 0 12px;
-          color: var(--jp-ui-font-color1);
-          background-color: var(--jp-layout-color1);
-          height: 24px;
-          transition: background-color 0.2s ease;
-        }
-        .jp-Frontier-StatusItem:hover {
-          background-color: var(--jp-layout-color2);
-        }
-        .jp-Frontier-StatusItem.active {
-          background-color: var(--jp-brand-color1);
-          color: white;
-        }
-      `;
-      document.head.appendChild(style);
-
-      // Create button with icon
-      const button = new ToolbarButton({
-        icon: 'fa-rocket',
-        onClick: () => {
-          this.toggleActive();
-          console.log('Frontier status clicked!');
-        },
-        tooltip: 'Frontier Status'
-      });
-
-      this.node.appendChild(button.node);
-    }
-
-    private toggleActive(): void {
-      this.toggleClass('active');
-    }
-  }
-
-  const statusBar: IStatusBar = {
-    registerStatusItem: (id: string, statusItem: IStatusBar.IItem) => {
-      let _isDisposed = false;
-      
-      // Create a new instance for each registration
-      const widget = new FrontierStatus();
-      widget.id = id;
-      
-      // If this is our own registration, show the widget
-      if (id === 'frontier-status') {
-        statusItem.item = widget;
-      }
-      
-      return {
-        dispose: () => { 
-          widget.dispose();
-          _isDisposed = true;
-        },
-        get isDisposed(): boolean {
-          return _isDisposed;
-        }
-      };
-    }
-  };
-
-  return statusBar;
-}
-
-const userPlugin: JupyterFrontEndPlugin<IStatusBar> = {
-  id: "Frontier",
-  autoStart: true,
-  activate: activateFrontier,
-  provides: IStatusBar
-};
-
-/**
- * A simple frontend plugin that activates with JupyterLab
- */
+// Frontend plugin for the welcome panel
 const frontendPlugin: JupyterFrontEndPlugin<void> = {
   id: 'jupyterlite-embedded-kernel:frontend',
   autoStart: true,
-  activate: (app: JupyterFrontEnd) => {
-    console.log('JupyterLab frontend plugin activated!');
+  activate: async (app: JupyterFrontEnd) => {
+    console.log('Activating frontend plugin...');
+    
+    // Wait for app to be ready
+    // await app.started;
+    
+    // Create welcome panel
+    const welcomePanel = new WelcomePanel();
+    
+    try {
+      if (!app.shell) {
+        throw new Error('Application shell is not available');
+      }
+      
+      // Add panel to the main area
+      app.shell.add(welcomePanel, 'center');
+      console.log('Welcome panel added successfully');
+      
+      // Activate the panel
+      app.shell.activateById(welcomePanel.id);
+    } catch (error) {
+      console.error('Failed to add welcome panel:', error);
+    }
   }
 };
 
-export default [enhancedKernel, userPlugin, frontendPlugin];
+// Kernel plugin for the embedded kernel
+const kernelPlugin: JupyterLiteServerPlugin<void> = {
+  id: 'jupyterlite-embedded-kernel:kernel',
+  autoStart: true,
+  requires: [IKernelSpecs],
+  activate: (app: JupyterLiteServer, kernelspecs: IKernelSpecs) => {
+    kernelspecs.register({
+      spec: {
+        name: 'echo',
+        display_name: 'Echo Kernel',
+        language: 'text',
+        argv: [],
+        resources: {}
+      },
+      create: async (options: IKernel.IOptions): Promise<IKernel> => {
+        const kernel = new EchoKernel(options);
+        await kernel.ready;
+        return kernel;
+      }
+    });
+  }
+};
+
+export default [frontendPlugin, kernelPlugin];
