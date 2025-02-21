@@ -18,14 +18,14 @@ class WelcomePanel extends Widget {
     style.textContent = `
       .welcome-card {
         opacity: 0;
-        transform: translateY(20px);
-        animation: fadeInUp 0.6s ease forwards;
+        transform: translateY(10px);
+        animation: fadeInUp 0.4s ease forwards;
       }
       
       @keyframes fadeInUp {
         from {
           opacity: 0;
-          transform: translateY(20px);
+          transform: translateY(10px);
         }
         to {
           opacity: 1;
@@ -33,74 +33,48 @@ class WelcomePanel extends Widget {
         }
       }
       
-      .welcome-card:nth-child(1) { animation-delay: 0.2s; }
-      .welcome-card:nth-child(2) { animation-delay: 0.4s; }
-      .welcome-card:nth-child(3) { animation-delay: 0.6s; }
+      .welcome-card:nth-child(1) { animation-delay: 0.1s; }
+      .welcome-card:nth-child(2) { animation-delay: 0.2s; }
+      .welcome-card:nth-child(3) { animation-delay: 0.3s; }
       
       .welcome-icon {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-        transition: all 0.3s ease;
+        font-size: 1.5rem;
+        margin-right: 1rem;
       }
       
       .welcome-title {
-        background: linear-gradient(120deg, #ff3b30, #ff9500);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-size: 3rem !important;
-        margin-bottom: 1.5rem !important;
+        color: var(--jp-ui-font-color0);
+        font-size: 1.2rem !important;
+        margin-bottom: 1rem !important;
+        font-weight: 600;
       }
     `;
     document.head.appendChild(style);
 
     const container = document.createElement('div');
     container.style.cssText = `
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--jp-layout-color0);
-      padding: 2rem;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       z-index: 1000;
-    `;
-
-    const content = document.createElement('div');
-    content.style.cssText = `
-      max-width: 1200px;
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 3rem;
       background: var(--jp-layout-color1);
-      border-radius: 24px;
-      padding: 3rem;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      width: 400px;
+      padding: 1.5rem;
     `;
 
     const header = document.createElement('div');
     header.innerHTML = `
-      <h1 class="welcome-title" style="
-        text-align: center;
-        font-weight: 700;
-        font-size: 3rem;
-        margin: 0;
-      ">Welcome to Embedded Kernel</h1>
-      <p style="
-        margin: 1.5rem 0;
-        color: var(--jp-ui-font-color2);
-        text-align: center;
-        font-size: 1.4rem;
-        line-height: 1.6;
-      ">Get started with your embedded development journey</p>
+      <h1 class="welcome-title">Choose an action</h1>
     `;
 
     const optionsContainer = document.createElement('div');
     optionsContainer.style.cssText = `
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 2rem;
-      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
     `;
 
     const options = [
@@ -108,22 +82,22 @@ class WelcomePanel extends Widget {
         action: 'flash',
         icon: '⚡',
         title: 'Flash Device',
-        description: 'Upload firmware to your device securely and quickly',
-        color: '#ff3b30'
+        description: 'Upload firmware to your device',
+        color: 'var(--jp-warn-color1)'
       },
       {
         action: 'notebook',
-        icon: '📓',
-        title: 'Create Notebook',
-        description: 'Start a new interactive development session',
-        color: '#ff9500'
+        icon: '📝',
+        title: 'New Notebook',
+        description: 'Create development session',
+        color: 'var(--jp-info-color1)'
       },
       {
         action: 'help',
-        icon: '💡',
-        title: 'Quick Start',
-        description: 'Learn the basics and best practices',
-        color: '#34c759'
+        icon: '📚',
+        title: 'Documentation',
+        description: 'View guides and reference',
+        color: 'var(--jp-brand-color1)'
       }
     ];
 
@@ -131,52 +105,42 @@ class WelcomePanel extends Widget {
       const card = document.createElement('div');
       card.className = 'welcome-card';
       card.innerHTML = `
-        <span class="welcome-icon">${icon}</span>
-        <h3 style="
-          margin: 0.5rem 0;
-          font-size: 1.6rem;
-          font-weight: 600;
-        ">${title}</h3>
-        <p style="
-          margin: 1rem 0;
-          color: var(--jp-ui-font-color2);
-          font-size: 1.1rem;
-          line-height: 1.5;
-        ">${description}</p>
+        <div style="display: flex; align-items: center;">
+          <span class="welcome-icon">${icon}</span>
+          <div>
+            <div style="
+              font-weight: 500;
+              color: var(--jp-ui-font-color0);
+            ">${title}</div>
+            <div style="
+              color: var(--jp-ui-font-color2);
+              font-size: 0.9rem;
+            ">${description}</div>
+          </div>
+        </div>
       `;
       card.style.cssText = `
-        background: var(--jp-layout-color1);
-        border: 2px solid var(--jp-border-color1);
-        border-radius: 16px;
-        padding: 2.5rem;
+        background: var(--jp-layout-color2);
+        border: 1px solid var(--jp-border-color1);
+        border-radius: 4px;
+        padding: 0.75rem;
         cursor: pointer;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        position: relative;
-        overflow: hidden;
-        color: var(--jp-ui-font-color0);
-        font-family: var(--jp-ui-font-family);
+        transition: all 0.2s ease;
       `;
 
       card.addEventListener('mouseover', () => {
-        card.style.transform = 'translateY(-8px)';
+        card.style.background = 'var(--jp-layout-color3)';
         card.style.borderColor = color;
-        card.style.boxShadow = `0 12px 30px ${color}33`;
       });
 
       card.addEventListener('mouseout', () => {
-        card.style.transform = '';
-        card.style.borderColor = '';
-        card.style.boxShadow = '';
+        card.style.background = 'var(--jp-layout-color2)';
+        card.style.borderColor = 'var(--jp-border-color1)';
       });
 
       card.addEventListener('click', async () => {
-        // Add click effect
-        card.style.transform = 'scale(0.95)';
-        setTimeout(() => card.style.transform = '', 150);
+        card.style.transform = 'scale(0.98)';
+        setTimeout(() => card.style.transform = '', 100);
 
         switch (action) {
           case 'flash':
@@ -191,7 +155,7 @@ class WelcomePanel extends Widget {
             console.log('Creating new notebook...');
             break;
           case 'help':
-            console.log('Opening quick start guide...');
+            console.log('Opening documentation...');
             break;
         }
       });
@@ -199,9 +163,8 @@ class WelcomePanel extends Widget {
       optionsContainer.appendChild(card);
     });
 
-    content.appendChild(header);
-    content.appendChild(optionsContainer);
-    container.appendChild(content);
+    container.appendChild(header);
+    container.appendChild(optionsContainer);
     this.node.appendChild(container);
   }
 }
