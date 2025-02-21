@@ -34,11 +34,13 @@ class WelcomePanel extends Widget {
         backdrop-filter: blur(2px);
         z-index: 999;
         opacity: 0;
-        transition: opacity 0.2s ease;
+        transition: all 0.3s ease;
+        pointer-events: none;
       }
 
       .jp-kernel-welcome-panel.visible .welcome-overlay {
         opacity: 1;
+        pointer-events: all;
       }
 
       .welcome-dialog {
@@ -109,6 +111,15 @@ class WelcomePanel extends Widget {
         color: var(--jp-ui-font-color0);
         background: var(--jp-layout-color2);
         opacity: 1;
+      }
+
+      .jp-kernel-welcome-panel.hiding .welcome-overlay {
+        opacity: 0;
+      }
+
+      .jp-kernel-welcome-panel.hiding .welcome-dialog {
+        opacity: 0;
+        transform: translate(-50%, -40%);
       }
     `;
     document.head.appendChild(style);
@@ -257,7 +268,11 @@ class WelcomePanel extends Widget {
   }
 
   hide(): void {
-    this.removeClass('visible');
+    this.addClass('hiding');
+    setTimeout(() => {
+      this.removeClass('visible');
+      this.removeClass('hiding');
+    }, 300); // Match the transition duration
   }
 }
 
