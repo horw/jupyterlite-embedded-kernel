@@ -1,6 +1,6 @@
 import { BaseKernel } from '@jupyterlite/kernel';
 import { KernelMessage } from '@jupyterlab/services';
-import { ESPLoader, FlashOptions, LoaderOptions, Transport } from 'esptool-js';
+import { ESPLoader} from 'esptool-js';
 
 /**
  * A kernel that handles MicroPython flashing and serial communication
@@ -8,8 +8,8 @@ import { ESPLoader, FlashOptions, LoaderOptions, Transport } from 'esptool-js';
 export class EchoKernel extends BaseKernel {
   public reader?: ReadableStreamDefaultReader<Uint8Array>;
   public writer?: WritableStreamDefaultWriter<Uint8Array>;
-  public device?: SerialPort;
-  public esploader?: ESPLoader;
+  public device?: ESPLoader;
+  // public esploader?: ESPLoader;
   private blocker: Promise<void> | null = null;
   private blockerResolve: (() => void) | null = null;
   private first_run = true;
@@ -99,84 +99,7 @@ export class EchoKernel extends BaseKernel {
    */
   async flashMicroPython(firmwareUrl: string): Promise<void> {
     try {
-      // Request port access with filters for ESP32-C3
-      const portFilters = [
-        // ESP32-C3 common USB IDs
-        { usbVendorId: 0x303A, usbProductId: 0x1001 },  // ESP32-C3 default
-        { usbVendorId: 0x10C4, usbProductId: 0xEA60 },  // CP2102 USB-to-UART
-        { usbVendorId: 0x1A86, usbProductId: 0x7523 }   // CH340 USB-to-UART
-      ];
 
-      this.streamOutput('Please select your ESP32-C3 device...\n');
-
-      if (!this.device) {
-        console.log("Requesting port");
-        this.device = await navigator.serial.requestPort({ filters: portFilters });
-      }
-      console.log("123")
-      var transport = new Transport(this.device, true);
-
-      console.log("TR port");
-      const flashOptions = {
-        transport,
-        baudrate: 115600,
-      } as LoaderOptions;
-      var esploader = new ESPLoader(flashOptions);
-      console.log("START")
-      var chip = await esploader.main();
-  
-      // Temporarily broken
-      // await esploader.flashId();
-      console.log("Settings done for :" + chip);
-
-    //   if (!this.device) {
-    //     throw new Error('Failed to get serial port access');
-    //   }
-
-    //   // Initialize ESPLoader with updated options
-    //   const loaderOptions: ESPLoaderOptions = {
-    //     transport: Transport.SERIAL,
-    //     baudrate: 115200,
-    //     serialPort: this.device
-    //   };
-      
-      try {
-        // Connect and identify the chip
-        this.streamOutput('Connected to ESP32-C3\n');
-
-        // Use embedded firmware directly
-        this.streamOutput('Loading firmware...\n');
-        const firmware = await this.getFirmware();
-
-        // Flash the firmware with flash options
-        this.streamOutput('Starting to flash MicroPython...\n');
-        const flashOptions: FlashOptions = {
-          fileArray: [{
-            data: firmware,
-            address: 0x0
-          }],
-          flashSize: '4MB',  // Common size for ESP32-C3
-          flashMode: 'DIO',  // Default flash mode
-          flashFreq: '40MHz', // Common frequency
-          eraseAll: true,    // Ensure clean flash
-          compress: true,    // Enable compression
-          reportProgress: (fileIndex: number, written: number, total: number) => {
-            const progress = (written / total) * 100;
-            this.streamOutput(`Flashing progress: ${Math.round(progress)}% (${written}/${total} bytes)\n`);
-          }
-        };
-        
-        await esploader.writeFlash(flashOptions);
-        this.streamOutput('MicroPython flashed successfully!\n');
-
-        // Reset the device
-        this.streamOutput('Device reset complete\n');
-
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        this.streamOutput(`Error during flashing: ${errorMessage}\n`);
-        throw error;
-      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       this.streamOutput(`Error during flashing: ${errorMessage}\n`);
@@ -185,11 +108,20 @@ export class EchoKernel extends BaseKernel {
   }
 
   async getFirmware(): Promise<string> {
-    // ESP32_GENERIC_C3-20231005-v1.21.0.bin embedded as base64
-    const firmwareBase64 = '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...'; // Truncated for brevity
-
-    // const firmwareArrayBuffer = Buffer.from(firmwareBase64, 'base64');
-    return firmwareBase64;
+    const firmwareUrl = 'https://micropython.org/resources/firmware/ESP32_GENERIC_C3-20241129-v1.24.1.bin';
+    
+    try {
+      const response = await fetch(firmwareUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch firmware: ${response.status} ${response.statusText}`);
+      }
+      
+      const arrayBuffer = await response.arrayBuffer();
+      return Buffer.from(arrayBuffer).toString('base64');
+    } catch (error) {
+      console.error('Error fetching firmware:', error);
+      throw error;
+    }
   }
 
   async executeRequest(
@@ -204,19 +136,46 @@ export class EchoKernel extends BaseKernel {
     const { code } = content;
 
     if (code.startsWith('%%flash_micropython')) {
-      const url = code.split('\n')[1].trim();
-      if (!url) {
+      const lines = code.split('\n').filter(line => line.trim());
+      
+      // If no URL provided, show the selection interface
+      if (lines.length === 1) {
+        const defaultFirmwareUrl = 'https://micropython.org/resources/firmware/ESP32_GENERIC_C3-20241129-v1.24.1.bin';
+        
+        this.streamOutput(`Select a firmware option or enter a custom URL:\n\n`);
+        this.streamOutput(`1. Latest ESP32-C3 Generic (${defaultFirmwareUrl})\n`);
+        this.streamOutput(`2. Custom URL (Enter the complete URL on the next line)\n\n`);
+        this.streamOutput(`Usage:\n`);
+        this.streamOutput(`%%flash_micropython\n`);
+        this.streamOutput(`<firmware_url>   # Replace with your URL or use option 1\n`);
+        
+        return {
+          status: 'ok',
+          execution_count: this.executionCount,
+          user_expressions: {},
+          payload: []
+        };
+      }
+
+      let firmwareUrl = lines[1].trim();
+      
+      // If they selected option 1, use the default URL
+      if (firmwareUrl === '1') {
+        firmwareUrl = 'https://micropython.org/resources/firmware/ESP32_GENERIC_C3-20241129-v1.24.1.bin';
+      }
+      
+      if (!firmwareUrl || (firmwareUrl === '2')) {
         return {
           status: 'error',
           execution_count: this.executionCount,
           ename: 'ValueError',
           evalue: 'Missing MicroPython firmware URL',
-          traceback: ['Please provide MicroPython firmware URL']
+          traceback: ['Please provide a valid MicroPython firmware URL']
         };
       }
-      
+
       try {
-        await this.flashMicroPython(url);
+        await this.flashMicroPython(firmwareUrl);
         return {
           status: 'ok',
           execution_count: this.executionCount,

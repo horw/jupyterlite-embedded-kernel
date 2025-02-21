@@ -3,6 +3,8 @@ import { JupyterLiteServer, JupyterLiteServerPlugin } from '@jupyterlite/server'
 import { IKernel, IKernelSpecs } from '@jupyterlite/kernel';
 import { EchoKernel } from './kernel';
 
+import { ESPLoader, FlashOptions, LoaderOptions, Transport } from 'esptool-js';
+
 /**
  * Plugin configuration for the enhanced kernel
  */
@@ -44,18 +46,40 @@ const enhancedKernel: JupyterLiteServerPlugin<void> = {
 
         async function connectSerialPort() {
           try {
-            const port = await navigator.serial.requestPort();
-            await port.open({ baudRate: 115200 });
-            await port.setSignals({ dataTerminalReady: false });
-            await new Promise((resolve) => setTimeout(resolve, 200));
-            await port.setSignals({ dataTerminalReady: true });
+            const firmwareUrl = 'https://micropython.org/resources/firmware/ESP32_GENERIC_C3-20241129-v1.24.1.bin';
 
-            const reader = port.readable?.getReader();
-            const writer = port.writable?.getWriter();
+            const response = await fetch(firmwareUrl);
+            if (!response.ok) {
+              throw new Error(`Failed to fetch firmware: ${response.status} ${response.statusText}`);
+            }
 
-            kernel.reader = reader;
-            kernel.writer = writer;
-            kernel.device = port;
+            const arrayBuffer = await response.arrayBuffer();
+
+            const device = await navigator.serial.requestPort();
+            const transport = new Transport(device, true);
+            let flashOptions = {
+              transport,
+              baudrate: 115600,
+            } as LoaderOptions;
+            const esploader = new ESPLoader(flashOptions);
+            await esploader.main();
+
+            let flashOptions1: FlashOptions = {
+              fileArray: [{
+                data: arrayBuffer,
+                address: 0x0
+              }],
+              flashSize: "keep",
+              eraseAll: false,
+              compress: true,
+              reportProgress: (fileIndex, written, total) => {
+                console.log(total)
+                console.log(fileIndex)
+              },
+              calculateMD5Hash: (image) => CryptoJS.MD5(CryptoJS.enc.Latin1.parse(image)),
+            } as FlashOptions;
+            await esploader.writeFlash(flashOptions1);
+            kernel.device = esploader;
           } catch (err) {
             console.error('Serial Port Error:', err);
           }
