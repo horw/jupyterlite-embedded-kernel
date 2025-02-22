@@ -10,6 +10,7 @@ class WelcomePanel extends Widget {
   private buttonContainer: HTMLElement;
   private firmwareBlob: Blob | null = null;
   private connected: Boolean = false;
+  private transport?: Transport;
   private firmwareString: string | null = null;
 
   constructor() {
@@ -462,23 +463,44 @@ class WelcomePanel extends Widget {
             try {
               const connectCard = document.querySelector(`.welcome-card[data-action="connect"]`);
 
-              const device = await navigator.serial.requestPort();
-              const transport = new Transport(device, true);
-              await transport.connect();
-              kernel.transport = transport;
-              this.connected = true
-              
-              if (this.connected) {
-                connectCard.innerHTML = `
-                  <div class="card-content">
-                    <span class="welcome-icon">✓</span>
-                    <h3>Device Connected</h3>
-                    <p>Click to disconnect</p>
-                  </div>
-                `;
+              if (!this.connected) {
+                // Connect to device
+                const device = await navigator.serial.requestPort();
+                const transport = new Transport(device, true);
+                await transport.connect();
+                kernel.transport = transport;
+                this.transport = transport;
+                this.connected = true;
+              } else {
+                await this.transport?.disconnect();
+                kernel.transport = undefined;
+                this.transport = undefined;
+                this.connected = false;
+              }
+
+              // Update UI based on connection state
+              if (connectCard) {
+                if (this.connected) {
+                  connectCard.innerHTML = `
+                    <div class="card-content">
+                      <span class="welcome-icon">✓</span>
+                      <h3>Device Connected</h3>
+                      <p>Click to disconnect</p>
+                    </div>
+                  `;
+                } else {
+                  connectCard.innerHTML = `
+                    <div class="card-content">
+                      <span class="welcome-icon">🔌</span>
+                      <h3>Connect Device</h3>
+                      <p>Connect to ESP32 device via serial</p>
+                    </div>
+                  `;
+                }
               }
             } catch (err) {
-
+              console.error('Connection error:', err);
+              const connectCard = document.querySelector(`.welcome-card[data-action="connect"]`);
               if (connectCard) {
                 connectCard.innerHTML = `
                   <div class="card-content">
@@ -488,6 +510,10 @@ class WelcomePanel extends Widget {
                   </div>
                 `;
               }
+              // Reset state on error
+              this.transport = undefined;
+              kernel.transport = undefined;
+              this.connected = false;
             }
             break;
           case 'flash':
