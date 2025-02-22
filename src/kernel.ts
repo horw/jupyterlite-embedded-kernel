@@ -4,6 +4,8 @@ import { Transport } from 'esptool-js';
 
 export class EchoKernel extends BaseKernel {
   public transport?: Transport;
+  public writer?: WritableStreamDefaultWriter<Uint8Array>; // The serial port writer.
+
 
   async kernelInfoRequest(): Promise<KernelMessage.IInfoReplyMsg['content']> {
     const content: KernelMessage.IInfoReply = {
@@ -52,37 +54,97 @@ export class EchoKernel extends BaseKernel {
     const { code } = content;
 
     const encoder = new TextEncoder();
-    // const ctrl_a = new Uint8Array([1])
+    const decoder = new TextDecoder();
     const ctrl_d = new Uint8Array([4]);
     const ctrl_e = new Uint8Array([5]);
-
     const new_line = encoder.encode('\r\n');
 
-    await this.transport.write(ctrl_e);
-    await this.transport.write(new_line);
+    try {
+      // Send the command
+      if (this.writer == undefined){
+        this.writer = this.transport.device.writable?.getWriter();
+      }
+      if (this.writer == undefined){
+        return {
+          status: 'error',
+          execution_count: this.executionCount,
+          ename: 'ValueError',
+          evalue: 'Missing Writter firmware URL',
+          traceback: ['Please provide MicroPython firmware URL']
+        };
+      }
+      await this.writer.write(ctrl_e);
+      await this.writer.write(new_line);
+      const data = encoder.encode(code + "######START REQUEST######");
+      console.log(data)
+      await this.writer.write(data);
+      await this.writer.write(ctrl_d);
+      await this.writer.write(new_line);
 
-    const data = encoder.encode(code+"######START REQUEST######");
-    await this.transport.write(data);
 
-    await this.transport.write(ctrl_d);
-    await this.transport.write(new_line);
+      // Read response with buffering
+      let buffer = '';
+      let outputStarted = false;
+      let timeout = 5000; // 5 second timeout
+      const startTime = Date.now();
 
+      while (true) {
+        const readLoop = this.transport.rawRead();
+        const { value, done } = await readLoop.next();
+        
+        if (done) break;
+        
+        if (value) {
+          const chunk = decoder.decode(value);
+          buffer += chunk;
+          console.log(value)
+          console.log(buffer)
+          // Check if we've found the start marker
+          if (!outputStarted && buffer.includes('######START REQUEST######')) {
+            outputStarted = true;
+            buffer = buffer.split('######START REQUEST######')[1];
+          }
 
-    // await this.transport.setDTR(false);
-    // await new Promise((resolve) => setTimeout(resolve, 100));
-    // await this.transport.setDTR(true);
+          // If we're collecting output and we see '>>', we're done
+          if (outputStarted && buffer.includes('>>')) {
+            const output = buffer.split('>>')[0].trim();
+            console.log('Output:', output);
+            
+            // Stream the output to the notebook
+            this.stream({
+              name: 'stdout',
+              text: output + '\n'
+            });
+            
+            break;
+          }
+        }
 
-    const readLoop = this.transport.rawRead();
-    const { value, done } = await readLoop.next();
+        // Check for timeout
+        if (Date.now() - startTime > timeout) {
+          throw new Error('Command execution timed out');
+        }
 
-    console.log(value);
-    console.log(done);
-    return {
-      status: 'ok',
-      execution_count: this.executionCount,
-      user_expressions: {},
-    };
+        // Small delay to prevent tight loop
+        await new Promise(resolve => setTimeout(resolve, 10));
+      }
 
+      return {
+        status: 'ok',
+        execution_count: this.executionCount,
+        user_expressions: {},
+      };
+
+    } catch (error: any) {
+      console.error('Execute error:', error);
+      return {
+        status: 'error',
+        execution_count: this.executionCount,
+        ename: 'ExecuteError',
+        evalue: error instanceof Error ? error.message : 'Unknown error',
+        traceback: error instanceof Error ? [error.stack || ''] : ['Unknown error occurred'],
+      };
+    }
   }
 
   async completeRequest(
