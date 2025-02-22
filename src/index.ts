@@ -43,7 +43,7 @@ class WelcomePanel extends Widget {
     document.body.appendChild(this.buttonContainer);
   }
 
-  initUI(kernel: EchoKernel): void {
+  async initUI(kernel: EchoKernel): Promise<void> {
     // Add global styles including animation
     const style = document.createElement('style');
     style.textContent = `
@@ -297,6 +297,22 @@ class WelcomePanel extends Widget {
     `;
     document.head.appendChild(style);
 
+    // Try to connect automatically
+    try {
+      const device = await navigator.serial.requestPort();
+      const transport = new Transport(device, true);
+      await transport.connect();
+      kernel.transport = transport;
+      this.transport = transport;
+      this.connected = true;
+      console.log('Device connected automatically');
+    } catch (err) {
+      console.error('Failed to connect automatically:', err);
+      this.transport = undefined;
+      kernel.transport = undefined;
+      this.connected = false;
+    }
+
     // Add styles for progress bar
     const progressBarStyle = document.createElement('style');
     progressBarStyle.textContent = `
@@ -410,9 +426,9 @@ class WelcomePanel extends Widget {
     const cards = [
       {
         action: 'connect',
-        icon: '🔌',
-        title: 'Connect Device',
-        description: 'Connect to ESP32 device via serial',
+        icon: this.connected ? '✓' : '🔌',
+        title: this.connected ? 'Device Connected' : 'Connect Device',
+        description: this.connected ? 'Click to disconnect' : 'Connect to ESP32 device via serial',
         color: 'var(--ui-navy)'
       },
       {
@@ -423,26 +439,12 @@ class WelcomePanel extends Widget {
         color: 'var(--ui-red)'
       },
       {
-        action: 'notebook',
-        icon: '📓',
-        title: 'Create Notebook',
-        description: 'Create a new notebook for your project',
-        color: 'var(--ui-navy)'
-      },
-      {
         action: 'reset',
         icon: '🔄',
         title: 'Reset Firmware',
         description: 'Clear firmware cache and force new download',
         color: 'var(--ui-red)'
       },
-      {
-        action: 'docs',
-        icon: '📚',
-        title: 'Documentation',
-        description: 'View the documentation and examples',
-        color: 'var(--ui-navy)'
-      }
     ];
 
     cards.forEach(({ action, icon, title, description, color }) => {
@@ -472,6 +474,7 @@ class WelcomePanel extends Widget {
                 this.transport = transport;
                 this.connected = true;
               } else {
+                // Disconnect from device
                 await this.transport?.disconnect();
                 kernel.transport = undefined;
                 this.transport = undefined;
@@ -518,9 +521,12 @@ class WelcomePanel extends Widget {
             break;
           case 'flash':
             try {
-              const portFilters: { usbVendorId?: number | undefined, usbProductId?: number | undefined }[] = [];
-              const device = await navigator.serial.requestPort({ filters: portFilters });
+              // const portFilters: { usbVendorId?: number | undefined, usbProductId?: number | undefined }[] = [];
+              // const device = await navigator.serial.requestPort({ filters: portFilters });
+              if (this.transport==undefined){
+                return
 
+              }
               // Create progress overlay
               const progressOverlay = document.createElement('div');
               progressOverlay.className = 'progress-overlay';
@@ -540,9 +546,8 @@ class WelcomePanel extends Widget {
                 progressOverlay.classList.add('visible');
               });
 
-              const transport = new Transport(device, true);
               let loaderOptions = {
-                  transport,
+                  transport: this.transport,
                   baudrate: 115600,
                 } as LoaderOptions;
               const esploader = new ESPLoader(loaderOptions);
@@ -550,7 +555,8 @@ class WelcomePanel extends Widget {
               // Update status
               const statusEl = progressOverlay.querySelector('.progress-status') as HTMLElement;
               statusEl.textContent = 'Connecting to device...';
-              
+
+              await this.transport.disconnect()
               await esploader.main();
 
               // Use cached firmware if available, otherwise fetch it
@@ -617,8 +623,6 @@ class WelcomePanel extends Widget {
               await new Promise(resolve => setTimeout(resolve, 300));
               progressOverlay.remove();
 
-              console.log('Device selected for flashing:', device);
-              await transport.disconnect()
             } catch (err) {
               console.error('Failed to get serial port:', err);
               
@@ -639,9 +643,6 @@ class WelcomePanel extends Widget {
                 }, 3000);
               }
             }
-            break;
-          case 'notebook':
-            console.log('Creating new notebook...');
             break;
           case 'reset':
             try {
@@ -690,9 +691,6 @@ class WelcomePanel extends Widget {
                 }, 2000);
               }
             }
-            break;
-          case 'docs':
-            console.log('Opening documentation...');
             break;
         }
         this.hide();
@@ -832,6 +830,9 @@ const kernelPlugin: JupyterLiteServerPlugin<void> = {
   activate: (app: JupyterLiteServer, kernelspecs: IKernelSpecs) => {
     const activeKernels = new Map<string, EchoKernel>();
 
+    const welcomePanel = new WelcomePanel();
+    Widget.attach(welcomePanel, document.body);
+
     app.router.post('/api/kernels/(.*)/interrupt', async (req, kernelId: string) => {
       const kernel = activeKernels.get(kernelId);
       if (kernel) {
@@ -858,10 +859,8 @@ const kernelPlugin: JupyterLiteServerPlugin<void> = {
       create: async (options: IKernel.IOptions): Promise<IKernel> => {
         const kernel = new EchoKernel(options);
 
-        const welcomePanel = new WelcomePanel();
-        Widget.attach(welcomePanel, document.body);
         welcomePanel.initUI(kernel);
-        welcomePanel.show();
+        welcomePanel.hide();
         await kernel.ready;
 
         activeKernels.set(kernel.id, kernel);
