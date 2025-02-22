@@ -9,13 +9,14 @@ import * as CryptoJS from 'crypto-js';
 class WelcomePanel extends Widget {
   private buttonContainer: HTMLElement;
   private firmwareBlob: Blob | null = null;
+  private connected: Boolean = false;
   private firmwareString: string | null = null;
 
   constructor() {
     super();
     this.id = 'kernel-welcome-panel';
     this.addClass('jp-kernel-welcome-panel');
-    
+
     // Try to load cached firmware from localStorage
     const cachedFirmware = localStorage.getItem('cachedFirmware');
     if (cachedFirmware) {
@@ -23,22 +24,25 @@ class WelcomePanel extends Widget {
       console.log('Loaded firmware from localStorage');
     }
 
-    // Initialize buttonContainer
+    // Create button container
     this.buttonContainer = document.createElement('div');
+    this.buttonContainer.className = 'esp-button-container';
     this.buttonContainer.style.cssText = `
       position: fixed;
-      bottom: 20px;
-      right: 20px;
+      bottom: 2rem;
+      right: 2rem;
       width: 64px;
       height: 64px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 1rem;
       z-index: 999999999;
     `;
     document.body.appendChild(this.buttonContainer);
-    
-    this.initUI();
   }
 
-  private initUI(): void {
+  initUI(kernel: EchoKernel): void {
     // Add global styles including animation
     const style = document.createElement('style');
     style.textContent = `
@@ -404,6 +408,13 @@ class WelcomePanel extends Widget {
 
     const cards = [
       {
+        action: 'connect',
+        icon: '🔌',
+        title: 'Connect Device',
+        description: 'Connect to ESP32 device via serial',
+        color: 'var(--ui-navy)'
+      },
+      {
         action: 'flash',
         icon: '⚡️',
         title: 'Flash Device',
@@ -440,39 +451,45 @@ class WelcomePanel extends Widget {
       card.innerHTML = `
         <div class="card-content">
           <span class="welcome-icon">${icon}</span>
-          <div>
-            <div class="card-title">${title}</div>
-            <div class="card-description">${description}</div>
-          </div>
+          <h3>${title}</h3>
+          <p>${description}</p>
         </div>
       `;
-      card.style.cssText = `
-        background: var(--ui-white) !important;
-        border: 1.5px solid var(--ui-gray-light) !important;
-        border-radius: 16px !important;
-        padding: 1.25rem !important;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
-        margin-bottom: 0.75rem;
-      `;
-
-      card.addEventListener('mouseover', () => {
-        card.style.transform = 'translateY(-2px) scale(1.02)';
-        card.style.borderColor = 'var(--ui-red)';
-        card.style.boxShadow = 'var(--ui-shadow-md), 0 0 0 1px var(--ui-red), 0 0 0 4px rgba(255, 59, 48, 0.12)';
-      });
-
-      card.addEventListener('mouseout', () => {
-        card.style.transform = '';
-        card.style.borderColor = 'var(--ui-gray-light)';
-        card.style.boxShadow = '';
-      });
 
       card.addEventListener('click', async () => {
-        card.style.transform = 'scale(0.98)';
-        setTimeout(() => card.style.transform = '', 100);
-
         switch (action) {
+          case 'connect':
+            try {
+              const connectCard = document.querySelector(`.welcome-card[data-action="connect"]`);
+
+              const device = await navigator.serial.requestPort();
+              const transport = new Transport(device, true);
+              await transport.connect();
+              kernel.transport = transport;
+              this.connected = true
+              
+              if (this.connected) {
+                connectCard.innerHTML = `
+                  <div class="card-content">
+                    <span class="welcome-icon">✓</span>
+                    <h3>Device Connected</h3>
+                    <p>Click to disconnect</p>
+                  </div>
+                `;
+              }
+            } catch (err) {
+
+              if (connectCard) {
+                connectCard.innerHTML = `
+                  <div class="card-content">
+                    <span class="welcome-icon">❌</span>
+                    <h3>Connection Failed</h3>
+                    <p>Click to try again</p>
+                  </div>
+                `;
+              }
+            }
+            break;
           case 'flash':
             try {
               const portFilters: { usbVendorId?: number | undefined, usbProductId?: number | undefined }[] = [];
@@ -802,6 +819,7 @@ const kernelPlugin: JupyterLiteServerPlugin<void> = {
         // Attach directly to document body
         Widget.attach(welcomePanel, document.body);
         // Show the panel
+        welcomePanel.initUI(kernel);
         welcomePanel.show();
         await kernel.ready;
         console.log("Kernel ready")

@@ -1,10 +1,9 @@
 import { BaseKernel } from '@jupyterlite/kernel';
 import { KernelMessage } from '@jupyterlab/services';
+import { Transport } from 'esptool-js';
 
 export class EchoKernel extends BaseKernel {
-  public reader?: ReadableStreamDefaultReader<Uint8Array>;
-  public writer?: WritableStreamDefaultWriter<Uint8Array>;
-  public port?: SerialPort; // The serial port writer.
+  public transport?: Transport;
 
   async kernelInfoRequest(): Promise<KernelMessage.IInfoReplyMsg['content']> {
     const content: KernelMessage.IInfoReply = {
@@ -39,12 +38,33 @@ export class EchoKernel extends BaseKernel {
   async executeRequest(
     content: KernelMessage.IExecuteRequestMsg['content'],
   ): Promise<KernelMessage.IExecuteReplyMsg['content']> {
-    console.log("HELLO!")
+    // this.transport?.write([1,2,3,4])
+    // const readLoop = transport.rawRead();
+
+    if (this.transport == undefined){
+      return {
+          status: 'error',
+          execution_count: this.executionCount,
+          ename: 'ValueError',
+          evalue: 'Missing MicroPython firmware URL',
+          traceback: ['Please provide MicroPython firmware URL']
+        };
+    }
+    await this.transport.setDTR(false);
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    await this.transport.setDTR(true);
+
+    const readLoop = this.transport.rawRead();
+    const { value, done } = await readLoop.next();
+
+    console.log(value);
+    console.log(done);
     return {
       status: 'ok',
       execution_count: this.executionCount,
       user_expressions: {},
     };
+
   }
 
   async completeRequest(
