@@ -2,16 +2,27 @@ import { Widget } from '@lumino/widgets';
 import { JupyterLiteServer, JupyterLiteServerPlugin } from '@jupyterlite/server';
 import { IKernel, IKernelSpecs } from '@jupyterlite/kernel';
 import { EchoKernel } from './kernel';
+import { ESPLoader, FlashOptions, LoaderOptions, Transport } from 'esptool-js';
+import * as CryptoJS from 'crypto-js';
 
 // Create WelcomePanel class outside the plugin
 class WelcomePanel extends Widget {
   private buttonContainer: HTMLElement;
+  private firmwareBlob: Blob | null = null;
+  private firmwareString: string | null = null;
 
   constructor() {
     super();
     this.id = 'kernel-welcome-panel';
     this.addClass('jp-kernel-welcome-panel');
     
+    // Try to load cached firmware from localStorage
+    const cachedFirmware = localStorage.getItem('cachedFirmware');
+    if (cachedFirmware) {
+      this.firmwareString = cachedFirmware;
+      console.log('Loaded firmware from localStorage');
+    }
+
     // Initialize buttonContainer
     this.buttonContainer = document.createElement('div');
     this.buttonContainer.style.cssText = `
@@ -318,33 +329,41 @@ class WelcomePanel extends Widget {
       gap: 0.4rem;
     `;
 
-    const options = [
+    const cards = [
       {
         action: 'flash',
-        icon: '🔌',
+        icon: '⚡️',
         title: 'Flash Device',
-        description: 'Upload firmware to your device',
+        description: 'Flash your device with the latest firmware',
         color: 'var(--ui-red)'
       },
       {
         action: 'notebook',
-        icon: '📝',
-        title: 'New Notebook',
-        description: 'Create development session',
+        icon: '📓',
+        title: 'Create Notebook',
+        description: 'Create a new notebook for your project',
         color: 'var(--ui-navy)'
       },
       {
-        action: 'help',
+        action: 'reset',
+        icon: '🔄',
+        title: 'Reset Firmware',
+        description: 'Clear firmware cache and force new download',
+        color: 'var(--ui-red)'
+      },
+      {
+        action: 'docs',
         icon: '📚',
         title: 'Documentation',
-        description: 'View guides and reference',
+        description: 'View the documentation and examples',
         color: 'var(--ui-navy)'
       }
     ];
 
-    options.forEach(({ action, icon, title, description, color }) => {
+    cards.forEach(({ action, icon, title, description, color }) => {
       const card = document.createElement('div');
       card.className = 'welcome-card';
+      card.setAttribute('data-action', action);
       card.innerHTML = `
         <div class="card-content">
           <span class="welcome-icon">${icon}</span>
@@ -383,8 +402,67 @@ class WelcomePanel extends Widget {
         switch (action) {
           case 'flash':
             try {
-              const device = await navigator.serial.requestPort();
+              const portFilters: { usbVendorId?: number | undefined, usbProductId?: number | undefined }[] = [];
+              const device = await navigator.serial.requestPort({ filters: portFilters });
+
+              const transport = new Transport(device, true);
+              let loaderOptions = {
+                  transport,
+                  baudrate: 115600,
+                } as LoaderOptions;
+              const esploader = new ESPLoader(loaderOptions);
+              await esploader.main();
+
+              // Use cached firmware if available, otherwise fetch it
+              if (!this.firmwareString) {
+                console.log('Fetching firmware for the first time...');
+                let result = await fetch('http://localhost:5000/ESP32_GENERIC_C3-20241129-v1.24.1.bin', {
+                  mode: 'cors',
+                  headers: {
+                    'Accept': 'application/octet-stream',
+                  }
+                });
+
+                if (!result.ok) {
+                  throw new Error(`Failed to fetch firmware: ${result.status} ${result.statusText}`);
+                }
+
+                // Store the firmware as blob and string
+                this.firmwareBlob = await result.blob();
+                const uint8Array = new Uint8Array(await this.firmwareBlob.arrayBuffer());
+                this.firmwareString = Array.from(uint8Array)
+                  .map(byte => String.fromCharCode(byte))
+                  .join('');
+                
+                // Cache in localStorage
+                try {
+                  localStorage.setItem('cachedFirmware', this.firmwareString);
+                  console.log('Firmware cached in localStorage');
+                } catch (e) {
+                  console.warn('Failed to cache firmware in localStorage:', e);
+                }
+              } else {
+                console.log('Using cached firmware');
+              }
+
+              let flashOptions1: FlashOptions = {
+                fileArray: [{
+                  data: this.firmwareString,
+                  address: 0x0
+                }],
+                flashSize: "keep",
+                eraseAll: false,
+                compress: true,
+                reportProgress: (fileIndex, written, total) => {
+                  console.log('Flash progress:', {fileIndex, written, total})
+                },
+                calculateMD5Hash: (image) => CryptoJS.MD5(CryptoJS.enc.Latin1.parse(image)).toString(),
+              } as FlashOptions;
+
+              await esploader.writeFlash(flashOptions1);
+
               console.log('Device selected for flashing:', device);
+              await transport.disconnect()
             } catch (err) {
               console.error('Failed to get serial port:', err);
             }
@@ -392,7 +470,55 @@ class WelcomePanel extends Widget {
           case 'notebook':
             console.log('Creating new notebook...');
             break;
-          case 'help':
+          case 'reset':
+            try {
+              // Clear cached firmware
+              this.firmwareBlob = null;
+              this.firmwareString = null;
+              localStorage.removeItem('cachedFirmware');
+              
+              // Visual feedback
+              const resetCard = document.querySelector(`.welcome-card[data-action="reset"]`);
+              if (resetCard) {
+                const originalContent = resetCard.innerHTML;
+                resetCard.innerHTML = `
+                  <div class="welcome-card-content" style="color: var(--ui-red)">
+                    <div class="welcome-card-icon">✓</div>
+                    <div class="welcome-card-title">Cache Cleared!</div>
+                    <div class="welcome-card-description">Firmware will be downloaded fresh next time</div>
+                  </div>
+                `;
+                
+                // Restore original content after 2 seconds
+                setTimeout(() => {
+                  resetCard.innerHTML = originalContent;
+                }, 2000);
+              }
+              
+              console.log('Firmware cache cleared');
+            } catch (err) {
+              console.error('Failed to reset firmware cache:', err);
+              
+              // Show error feedback
+              const resetCard = document.querySelector(`.welcome-card[data-action="reset"]`);
+              if (resetCard) {
+                const originalContent = resetCard.innerHTML;
+                resetCard.innerHTML = `
+                  <div class="welcome-card-content" style="color: var(--ui-red)">
+                    <div class="welcome-card-icon">❌</div>
+                    <div class="welcome-card-title">Reset Failed</div>
+                    <div class="welcome-card-description">Please try again</div>
+                  </div>
+                `;
+                
+                // Restore original content after 2 seconds
+                setTimeout(() => {
+                  resetCard.innerHTML = originalContent;
+                }, 2000);
+              }
+            }
+            break;
+          case 'docs':
             console.log('Opening documentation...');
             break;
         }
