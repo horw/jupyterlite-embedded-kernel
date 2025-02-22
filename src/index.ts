@@ -830,6 +830,23 @@ const kernelPlugin: JupyterLiteServerPlugin<void> = {
   autoStart: true,
   requires: [IKernelSpecs],
   activate: (app: JupyterLiteServer, kernelspecs: IKernelSpecs) => {
+    const activeKernels = new Map<string, EchoKernel>();
+
+    app.router.post('/api/kernels/(.*)/interrupt', async (req, kernelId: string) => {
+      const kernel = activeKernels.get(kernelId);
+      if (kernel) {
+        try {
+          await kernel.interrupt();
+          return new Response(null, { status: 204 });
+        } catch (error) {
+          console.error('Failed to interrupt kernel:', error);
+          return new Response('Failed to interrupt kernel', { status: 500 });
+        }
+      }
+      return new Response('Kernel not found', { status: 404 });
+    });
+
+
     kernelspecs.register({
       spec: {
         name: 'echo',
@@ -840,15 +857,14 @@ const kernelPlugin: JupyterLiteServerPlugin<void> = {
       },
       create: async (options: IKernel.IOptions): Promise<IKernel> => {
         const kernel = new EchoKernel(options);
-        // Create welcome panel
+
         const welcomePanel = new WelcomePanel();
-        // Attach directly to document body
         Widget.attach(welcomePanel, document.body);
-        // Show the panel
         welcomePanel.initUI(kernel);
         welcomePanel.show();
         await kernel.ready;
-        console.log("Kernel ready")
+
+        activeKernels.set(kernel.id, kernel);
         return kernel;
       }
     });

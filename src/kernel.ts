@@ -37,6 +37,16 @@ export class EchoKernel extends BaseKernel {
     return content;
   }
 
+  async interrupt(): Promise<void> {
+    if (this.writer) {
+      const ctrl_c = new Uint8Array([3]);
+      const encoder = new TextEncoder();
+      const new_line = encoder.encode('\r\n');
+      await this.writer.write(ctrl_c);
+      await this.writer.write(new_line);
+    }
+  }
+
   async executeRequest(
     content: KernelMessage.IExecuteRequestMsg['content'],
   ): Promise<KernelMessage.IExecuteReplyMsg['content']> {
