@@ -439,6 +439,13 @@ class WelcomePanel extends Widget {
         color: 'var(--ui-red)'
       },
       {
+        action: 'reset-esp',
+        icon: '🔄',
+        title: 'Reset Esp',
+        description: 'Clear firmware cache and force new download',
+        color: 'var(--ui-red)'
+      },
+      {
         action: 'reset',
         icon: '🔄',
         title: 'Reset Firmware',
@@ -644,6 +651,15 @@ class WelcomePanel extends Widget {
               }
             }
             break;
+          case 'reset-esp':
+            if (this.transport == undefined){
+              break;
+            }
+            await this.transport.setDTR(false);
+            await new Promise((resolve) => setTimeout(resolve, 100));
+            await this.transport.setDTR(true);
+            break;
+
           case 'reset':
             try {
               // Clear cached firmware
@@ -859,7 +875,7 @@ const kernelPlugin: JupyterLiteServerPlugin<void> = {
       create: async (options: IKernel.IOptions): Promise<IKernel> => {
         const kernel = new EchoKernel(options);
 
-        welcomePanel.initUI(kernel);
+        await welcomePanel.initUI(kernel);
         welcomePanel.hide();
         await kernel.ready;
 
