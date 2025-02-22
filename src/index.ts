@@ -804,6 +804,7 @@ const kernelPlugin: JupyterLiteServerPlugin<void> = {
         // Show the panel
         welcomePanel.show();
         await kernel.ready;
+        console.log("Kernel ready")
         return kernel;
       }
     });
