@@ -292,6 +292,79 @@ class WelcomePanel extends Widget {
     `;
     document.head.appendChild(style);
 
+    // Add styles for progress bar
+    const progressBarStyle = document.createElement('style');
+    progressBarStyle.textContent = `
+      :root {
+        --ui-white: #ffffff;
+        --ui-red: #E31B23;
+        --ui-navy: #1c1c28;
+        --ui-shadow-sm: 0 2px 8px rgba(28, 28, 40, 0.08);
+        --ui-shadow-md: 0 8px 16px rgba(28, 28, 40, 0.12);
+        --ui-shadow-lg: 0 20px 40px rgba(28, 28, 40, 0.16);
+      }
+
+      .progress-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 999999;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+      }
+
+      .progress-overlay.visible {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .progress-container {
+        background: var(--ui-white);
+        border-radius: 16px;
+        padding: 2rem;
+        width: 400px;
+        box-shadow: var(--ui-shadow-lg);
+      }
+
+      .progress-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--ui-navy);
+      }
+
+      .progress-bar-container {
+        width: 100%;
+        height: 8px;
+        background: rgba(227, 27, 35, 0.1);
+        border-radius: 4px;
+        overflow: hidden;
+      }
+
+      .progress-bar {
+        width: 0%;
+        height: 100%;
+        background: var(--ui-red);
+        border-radius: 4px;
+        transition: width 0.3s ease;
+      }
+
+      .progress-status {
+        margin-top: 0.5rem;
+        font-size: 0.9rem;
+        color: var(--ui-navy);
+        opacity: 0.7;
+      }
+    `;
+    document.head.appendChild(progressBarStyle);
+
     const overlay = document.createElement('div');
     overlay.className = 'welcome-overlay';
     overlay.addEventListener('click', (e) => {
@@ -405,17 +478,41 @@ class WelcomePanel extends Widget {
               const portFilters: { usbVendorId?: number | undefined, usbProductId?: number | undefined }[] = [];
               const device = await navigator.serial.requestPort({ filters: portFilters });
 
+              // Create progress overlay
+              const progressOverlay = document.createElement('div');
+              progressOverlay.className = 'progress-overlay';
+              progressOverlay.innerHTML = `
+                <div class="progress-container">
+                  <div class="progress-title">Flashing Firmware...</div>
+                  <div class="progress-bar-container">
+                    <div class="progress-bar"></div>
+                  </div>
+                  <div class="progress-status">Initializing...</div>
+                </div>
+              `;
+              document.body.appendChild(progressOverlay);
+
+              // Show progress overlay
+              requestAnimationFrame(() => {
+                progressOverlay.classList.add('visible');
+              });
+
               const transport = new Transport(device, true);
               let loaderOptions = {
                   transport,
                   baudrate: 115600,
                 } as LoaderOptions;
               const esploader = new ESPLoader(loaderOptions);
+              
+              // Update status
+              const statusEl = progressOverlay.querySelector('.progress-status') as HTMLElement;
+              statusEl.textContent = 'Connecting to device...';
+              
               await esploader.main();
 
               // Use cached firmware if available, otherwise fetch it
               if (!this.firmwareString) {
-                console.log('Fetching firmware for the first time...');
+                statusEl.textContent = 'Downloading firmware...';
                 let result = await fetch('http://localhost:5000/ESP32_GENERIC_C3-20241129-v1.24.1.bin', {
                   mode: 'cors',
                   headers: {
@@ -454,17 +551,50 @@ class WelcomePanel extends Widget {
                 eraseAll: false,
                 compress: true,
                 reportProgress: (fileIndex, written, total) => {
-                  console.log('Flash progress:', {fileIndex, written, total})
+                  const progress = (written / total) * 100;
+                  const progressBar = progressOverlay.querySelector('.progress-bar') as HTMLElement;
+                  const statusEl = progressOverlay.querySelector('.progress-status') as HTMLElement;
+                  
+                  progressBar.style.width = `${progress}%`;
+                  statusEl.textContent = `Flashing: ${Math.round(progress)}% (${written} / ${total} bytes)`;
+                  
+                  console.log('Flash progress:', {fileIndex, written, total});
                 },
                 calculateMD5Hash: (image) => CryptoJS.MD5(CryptoJS.enc.Latin1.parse(image)).toString(),
               } as FlashOptions;
 
               await esploader.writeFlash(flashOptions1);
+              
+              // Show completion for a moment
+              statusEl.textContent = 'Flash complete!';
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              
+              // Hide and remove progress overlay
+              progressOverlay.classList.remove('visible');
+              await new Promise(resolve => setTimeout(resolve, 300));
+              progressOverlay.remove();
 
               console.log('Device selected for flashing:', device);
               await transport.disconnect()
             } catch (err) {
               console.error('Failed to get serial port:', err);
+              
+              // Show error in progress overlay if it exists
+              const progressOverlay = document.querySelector('.progress-overlay');
+              if (progressOverlay) {
+                const statusEl = progressOverlay.querySelector('.progress-status') as HTMLElement;
+                const titleEl = progressOverlay.querySelector('.progress-title') as HTMLElement;
+                
+                titleEl.textContent = 'Error';
+                titleEl.style.color = 'var(--ui-red)';
+                statusEl.textContent = 'Failed to flash device';
+                
+                // Hide after 3 seconds
+                setTimeout(() => {
+                  progressOverlay.classList.remove('visible');
+                  setTimeout(() => progressOverlay.remove(), 300);
+                }, 3000);
+              }
             }
             break;
           case 'notebook':
