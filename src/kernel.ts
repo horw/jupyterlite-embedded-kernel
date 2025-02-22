@@ -38,8 +38,6 @@ export class EchoKernel extends BaseKernel {
   async executeRequest(
     content: KernelMessage.IExecuteRequestMsg['content'],
   ): Promise<KernelMessage.IExecuteReplyMsg['content']> {
-    // this.transport?.write([1,2,3,4])
-    // const readLoop = transport.rawRead();
 
     if (this.transport == undefined){
       return {
@@ -50,9 +48,29 @@ export class EchoKernel extends BaseKernel {
           traceback: ['Please provide MicroPython firmware URL']
         };
     }
-    await this.transport.setDTR(false);
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    await this.transport.setDTR(true);
+
+    const { code } = content;
+
+    const encoder = new TextEncoder();
+    // const ctrl_a = new Uint8Array([1])
+    const ctrl_d = new Uint8Array([4]);
+    const ctrl_e = new Uint8Array([5]);
+
+    const new_line = encoder.encode('\r\n');
+
+    await this.transport.write(ctrl_e);
+    await this.transport.write(new_line);
+
+    const data = encoder.encode(code+"######START REQUEST######");
+    await this.transport.write(data);
+
+    await this.transport.write(ctrl_d);
+    await this.transport.write(new_line);
+
+
+    // await this.transport.setDTR(false);
+    // await new Promise((resolve) => setTimeout(resolve, 100));
+    // await this.transport.setDTR(true);
 
     const readLoop = this.transport.rawRead();
     const { value, done } = await readLoop.next();
