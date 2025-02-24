@@ -518,17 +518,19 @@ class WelcomePanel extends Widget {
             }
             break;
           case 'flash':
+            console.log("Trying to flash device")
+            console.log(this.transport)
             try {
-              // const portFilters: { usbVendorId?: number | undefined, usbProductId?: number | undefined }[] = [];
-              // const device = await navigator.serial.requestPort({ filters: portFilters });
               if (this.transport==undefined){
                 return
-
               }
+
+              console.log("Trying to disconnect")
               await this.transport.disconnect()
+              console.log("Disconnected")
+
               const device = await navigator.serial.requestPort();
               const transport = new Transport(device, true);
-              this.transport = transport
               // Create progress overlay
               const progressOverlay = document.createElement('div');
               progressOverlay.className = 'progress-overlay';
@@ -563,7 +565,7 @@ class WelcomePanel extends Widget {
               // Use cached firmware if available, otherwise fetch it
               if (!this.firmwareString) {
                 statusEl.textContent = 'Downloading firmware...';
-                let result = await fetch('http://localhost:5000/ESP32_GENERIC_C3-20241129-v1.24.1.bin', {
+                let result = await fetch('https://horw.github.io/buffer/ESP32_GENERIC_C3-20241129-v1.24.1.bin', {
                   mode: 'cors',
                   headers: {
                     'Accept': 'application/octet-stream',
@@ -624,6 +626,13 @@ class WelcomePanel extends Widget {
               await new Promise(resolve => setTimeout(resolve, 300));
               progressOverlay.remove();
 
+              await transport.setDTR(false);
+              await new Promise((resolve) => setTimeout(resolve, 100));
+              await transport.setDTR(true);
+
+              await transport.disconnect()
+              await this.transport.connect()
+
             } catch (err) {
               console.error('Failed to get serial port:', err);
 
@@ -652,6 +661,7 @@ class WelcomePanel extends Widget {
             await this.transport.setDTR(false);
             await new Promise((resolve) => setTimeout(resolve, 100));
             await this.transport.setDTR(true);
+            console.log("Device was reset.");
             break;
         }
         this.hide();
