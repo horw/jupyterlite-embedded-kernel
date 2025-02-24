@@ -121,16 +121,9 @@ export class EchoKernel extends BaseKernel {
           }
 
           // If we're collecting output and we see '>>', we're done
-          if (outputStarted && buffer.includes('>>')) {
-            const output = buffer.split('>>')[0].trim();
+          if (outputStarted && buffer.includes('>>>')) {
+            const output = buffer.split('>>>')[0].trim();
             console.log('Output:', output);
-            
-            // Stream the output to the notebook
-            this.stream({
-              name: 'stdout',
-              text: output + '\n'
-            });
-
             break;
           }
         }
