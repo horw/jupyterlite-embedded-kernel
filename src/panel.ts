@@ -49,7 +49,13 @@ export default class WelcomePanel extends Widget {
   private createMinimizedButton(): void {
     const button = document.createElement('button');
     button.className = 'minimized-button';
-    button.innerHTML = '⚡️';
+    
+    // Create and add the logo image
+    const img = document.createElement('img');
+    img.src = 'https://www.cdnlogo.com/logos/e/41/espressif-systems.svg';
+    img.alt = 'Espressif Systems Logo';
+    button.appendChild(img);
+    
     button.title = 'Open ESP32 Device Manager';
     button.style.display = 'none'; // Initially hidden
     button.addEventListener('click', () => this.show());

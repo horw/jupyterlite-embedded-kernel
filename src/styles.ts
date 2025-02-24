@@ -114,19 +114,25 @@ export const minimizedStyles = `
   }
 
   .minimized-button {
-    width: 64px;
-    height: 64px;
+    width: 96px;
+    height: 96px;
     border-radius: 50%;
-    background: var(--ui-navy);
-    color: white;
+    background: white;
     border: none;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    padding: 12px;
+    overflow: hidden;
+  }
+
+  .minimized-button img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
   }
 
   .minimized-button:hover {
@@ -144,7 +150,7 @@ export const minimizedStyles = `
   }
 
   .jp-kernel-welcome-panel.minimizing .welcome-dialog {
-    transform: translate(calc(50vw - 24px), calc(50vh - 24px)) scale(0.1);
+    transform: translate(calc(50vw - 32px), calc(50vh - 32px)) scale(0.1);
     opacity: 0;
   }
 `;
