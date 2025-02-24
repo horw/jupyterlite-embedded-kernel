@@ -441,15 +441,8 @@ class WelcomePanel extends Widget {
       {
         action: 'reset-esp',
         icon: '🔄',
-        title: 'Reset Esp',
-        description: 'Clear firmware cache and force new download',
-        color: 'var(--ui-red)'
-      },
-      {
-        action: 'reset',
-        icon: '🔄',
-        title: 'Reset Firmware',
-        description: 'Clear firmware cache and force new download',
+        title: 'Hard reset Esp',
+        description: 'Hard reset esp chip',
         color: 'var(--ui-red)'
       },
     ];
@@ -661,55 +654,6 @@ class WelcomePanel extends Widget {
             await this.transport.setDTR(false);
             await new Promise((resolve) => setTimeout(resolve, 100));
             await this.transport.setDTR(true);
-            break;
-
-          case 'reset':
-            try {
-              // Clear cached firmware
-              this.firmwareBlob = null;
-              this.firmwareString = null;
-              localStorage.removeItem('cachedFirmware');
-              
-              // Visual feedback
-              const resetCard = document.querySelector(`.welcome-card[data-action="reset"]`);
-              if (resetCard) {
-                const originalContent = resetCard.innerHTML;
-                resetCard.innerHTML = `
-                  <div class="welcome-card-content" style="color: var(--ui-red)">
-                    <div class="welcome-card-icon">✓</div>
-                    <div class="welcome-card-title">Cache Cleared!</div>
-                    <div class="welcome-card-description">Firmware will be downloaded fresh next time</div>
-                  </div>
-                `;
-                
-                // Restore original content after 2 seconds
-                setTimeout(() => {
-                  resetCard.innerHTML = originalContent;
-                }, 2000);
-              }
-              
-              console.log('Firmware cache cleared');
-            } catch (err) {
-              console.error('Failed to reset firmware cache:', err);
-              
-              // Show error feedback
-              const resetCard = document.querySelector(`.welcome-card[data-action="reset"]`);
-              if (resetCard) {
-                const originalContent = resetCard.innerHTML;
-                resetCard.innerHTML = `
-                  <div class="welcome-card-content" style="color: var(--ui-red)">
-                    <div class="welcome-card-icon">❌</div>
-                    <div class="welcome-card-title">Reset Failed</div>
-                    <div class="welcome-card-description">Please try again</div>
-                  </div>
-                `;
-                
-                // Restore original content after 2 seconds
-                setTimeout(() => {
-                  resetCard.innerHTML = originalContent;
-                }, 2000);
-              }
-            }
             break;
         }
         this.hide();
