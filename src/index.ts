@@ -534,6 +534,10 @@ class WelcomePanel extends Widget {
                 return
 
               }
+              await this.transport.disconnect()
+              const device = await navigator.serial.requestPort();
+              const transport = new Transport(device, true);
+              this.transport = transport
               // Create progress overlay
               const progressOverlay = document.createElement('div');
               progressOverlay.className = 'progress-overlay';
@@ -554,7 +558,7 @@ class WelcomePanel extends Widget {
               });
 
               let loaderOptions = {
-                  transport: this.transport,
+                  transport: transport,
                   baudrate: 115600,
                 } as LoaderOptions;
               const esploader = new ESPLoader(loaderOptions);
@@ -563,7 +567,6 @@ class WelcomePanel extends Widget {
               const statusEl = progressOverlay.querySelector('.progress-status') as HTMLElement;
               statusEl.textContent = 'Connecting to device...';
 
-              await this.transport.disconnect()
               await esploader.main();
 
               // Use cached firmware if available, otherwise fetch it
@@ -863,14 +866,16 @@ const kernelPlugin: JupyterLiteServerPlugin<void> = {
       return new Response('Kernel not found', { status: 404 });
     });
 
-
     kernelspecs.register({
       spec: {
-        name: 'echo',
-        display_name: 'Echo Kernel',
-        language: 'text',
+        name: 'embedded',
+        display_name: 'Embedded Kernel',
+        language: 'python',
         argv: [],
-        resources: {}
+        resources: {
+          'logo-32x32': 'https://www.cdnlogo.com/logos/e/41/espressif-systems.svg',
+          'logo-64x64': 'https://www.cdnlogo.com/logos/e/41/espressif-systems.svg',
+        },
       },
       create: async (options: IKernel.IOptions): Promise<IKernel> => {
         const kernel = new EchoKernel(options);

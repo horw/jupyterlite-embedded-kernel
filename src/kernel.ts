@@ -10,7 +10,7 @@ export class EchoKernel extends BaseKernel {
   async kernelInfoRequest(): Promise<KernelMessage.IInfoReplyMsg['content']> {
     const content: KernelMessage.IInfoReply = {
       implementation: 'embedded',
-      implementation_version: '1.0.0',
+      implementation_version: '0.1.0',
       language_info: {
         codemirror_mode: {
           name: 'python',
@@ -25,13 +25,8 @@ export class EchoKernel extends BaseKernel {
       },
       protocol_version: '5.3',
       status: 'ok',
-      banner: 'Echo Kernel with Serial Support',
-      help_links: [
-        {
-          text: 'Echo Kernel',
-          url: 'https://github.com/jupyterlite/echo-kernel',
-        },
-      ],
+      banner: 'Embedded Kernel with Serial Support',
+      help_links: [],
     };
 
     return content;
