@@ -1,9 +1,11 @@
 import { BaseKernel } from '@jupyterlite/kernel';
 import { KernelMessage } from '@jupyterlab/services';
 import { Transport } from 'esptool-js';
+import { DeviceService } from './services/DeviceService';
 
 export class EchoKernel extends BaseKernel {
   public transport?: Transport;
+  public deviceService: DeviceService;
   public writer?: WritableStreamDefaultWriter<Uint8Array>; // The serial port writer.
 
 
@@ -46,7 +48,8 @@ export class EchoKernel extends BaseKernel {
     content: KernelMessage.IExecuteRequestMsg['content'],
   ): Promise<KernelMessage.IExecuteReplyMsg['content']> {
 
-    if (this.transport == undefined){
+    console.log("Execute Request")
+    if (this.deviceService. == undefined){
       return {
           status: 'error',
           execution_count: this.executionCount,
@@ -56,6 +59,7 @@ export class EchoKernel extends BaseKernel {
         };
     }
 
+    console.log("Execute Request")
     const { code } = content;
 
     const encoder = new TextEncoder();
@@ -78,6 +82,7 @@ export class EchoKernel extends BaseKernel {
           traceback: ['Please provide MicroPython firmware URL']
         };
       }
+      console.log("Try to write")
       await this.writer.write(ctrl_e);
       await this.writer.write(new_line);
       const data = encoder.encode(code + "######START REQUEST######");

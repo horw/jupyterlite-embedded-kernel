@@ -25,15 +25,17 @@ export class FlashService {
   async flashDevice(): Promise<void> {
     const progressOverlay = new ProgressOverlay();
     try {
+      // First, ensure we're disconnected and get a fresh port
       await this.deviceService.disconnect();
-      await this.deviceService.connect();
-      progressOverlay.show();
+      this.deviceService.clearPort();
+      await this.deviceService.requestPort();
 
       const transport = this.deviceService.getTransport();
       if (!transport) {
         throw new Error('Failed to get device transport');
       }
 
+      progressOverlay.show();
       const loaderOptions = {
         transport: transport,
         baudrate: 115600,
@@ -76,6 +78,8 @@ export class FlashService {
       await new Promise(resolve => setTimeout(resolve, 2000));
     } finally {
       await progressOverlay.hide();
+      // After flashing, clear the port to ensure a fresh start
+      this.deviceService.clearPort();
     }
   }
 }

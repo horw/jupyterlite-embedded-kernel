@@ -1,10 +1,10 @@
 import { Transport } from 'esptool-js';
-import { ErrorHandler } from '../utils/ErrorHandler';
 
 export class DeviceService {
   private static instance: DeviceService;
-  private transport?: Transport;
-  private connected: boolean = false;
+  private port: SerialPort | null = null;
+  private transport: Transport | null = null;
+  private isDeviceConnected: boolean = false;
 
   private constructor() {}
 
@@ -15,54 +15,74 @@ export class DeviceService {
     return DeviceService.instance;
   }
 
-  async connect(): Promise<Transport> {
+  async requestPort(): Promise<void> {
     try {
-      const device = await navigator.serial.requestPort();
-      const transport = new Transport(device, true);
-      await transport.connect();
-      this.transport = transport;
-      this.connected = true;
-      return transport;
+      const port = await navigator.serial.requestPort();
+      this.port = port;
+      this.transport = new Transport(port);
     } catch (err) {
-      this.transport = undefined;
-      this.connected = false;
-      throw await ErrorHandler.handleError(err, 'Device connection');
+      console.error('Failed to get port:', err);
+      throw err;
+    }
+  }
+
+  async connect(): Promise<void> {
+    if (!this.port) {
+      await this.requestPort();
+    }
+
+    if (!this.port) {
+      throw new Error('No port selected');
+    }
+
+    try {
+      this.transport?.connect()
+      // await this.port.open({ baudRate: 115200 });
+      this.isDeviceConnected = true;
+    } catch (err) {
+      console.error('Failed to connect:', err);
+      throw err;
     }
   }
 
   async disconnect(): Promise<void> {
-    try {
-      await this.transport?.disconnect();
-      this.transport = undefined;
-      this.connected = false;
-    } catch (err) {
-      throw await ErrorHandler.handleError(err, 'Device disconnection');
+    if (this.port && this.port.readable) {
+      try {
+        await this.port.close();
+        this.isDeviceConnected = false;
+      } catch (err) {
+        console.error('Failed to disconnect:', err);
+        throw err;
+      }
     }
   }
 
   async reset(): Promise<void> {
-    if (!this.transport) {
-      throw new Error('Device not connected');
+    if (!this.port) {
+      throw new Error('No port selected');
     }
+
     try {
-      await this.transport.setDTR(false);
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      await this.transport.setDTR(true);
+      await this.port.setSignals({ dataTerminalReady: false });
+      await new Promise(resolve => setTimeout(resolve, 100));
+      await this.port.setSignals({ dataTerminalReady: true });
     } catch (err) {
-      throw await ErrorHandler.handleError(err, 'Device reset');
+      console.error('Failed to reset device:', err);
+      throw err;
     }
   }
 
-  isConnected(): boolean {
-    return this.connected;
-  }
-
-  getTransport(): Transport | undefined {
+  getTransport(): Transport | null {
     return this.transport;
   }
 
-  setTransport(transport: Transport | undefined): void {
-    this.transport = transport;
-    this.connected = !!transport;
+  isConnected(): boolean {
+    return this.isDeviceConnected;
+  }
+
+  clearPort(): void {
+    this.port = null;
+    this.transport = null;
+    this.isDeviceConnected = false;
   }
 }

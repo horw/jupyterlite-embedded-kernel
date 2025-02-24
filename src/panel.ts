@@ -104,6 +104,7 @@ export default class WelcomePanel extends Widget {
 
     this.overlay.appendChild(this.dialog.getElement());
     this.node.appendChild(this.overlay.getElement());
+    kernel.deviceService = this.deviceService;
   }
 
   show(): void {
