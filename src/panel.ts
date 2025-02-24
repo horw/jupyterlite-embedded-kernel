@@ -40,22 +40,21 @@ export default class WelcomePanel extends Widget {
     // Create button container
     this.buttonContainer = document.createElement('div');
     this.buttonContainer.className = 'esp-button-container';
-    this.buttonContainer.style.cssText = `
-      position: fixed;
-      bottom: 2rem;
-      right: 2rem;
-      width: 64px;
-      height: 64px;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 1rem;
-      z-index: 999999999;
-    `;
-    document.body.appendChild(this.buttonContainer);
+    this.createMinimizedButton();
 
     // Initialize styles
     this.initializeStyles();
+  }
+
+  private createMinimizedButton(): void {
+    const button = document.createElement('button');
+    button.className = 'minimized-button';
+    button.innerHTML = '⚡️';
+    button.title = 'Open ESP32 Device Manager';
+    button.style.display = 'none'; // Initially hidden
+    button.addEventListener('click', () => this.show());
+    this.buttonContainer.appendChild(button);
+    document.body.appendChild(this.buttonContainer);
   }
 
   private initializeStyles(): void {
@@ -239,7 +238,14 @@ export default class WelcomePanel extends Widget {
   show(): void {
     console.log('Showing panel...');
     this.node.style.display = 'block';
+    this.node.classList.remove('minimized');
     this.node.classList.add('visible');
+    
+    // Hide the minimized button
+    const minimizedButton = this.buttonContainer.querySelector('.minimized-button') as HTMLButtonElement;
+    if (minimizedButton) {
+      minimizedButton.style.display = 'none';
+    }
     
     // Force a reflow to ensure the transition works
     void this.node.offsetHeight;
@@ -251,13 +257,18 @@ export default class WelcomePanel extends Widget {
 
   hide(): void {
     console.log('Hiding panel...');
+    this.node.classList.add('minimizing');
     this.node.classList.remove('visible');
     this.node.style.opacity = '0';
     
-    // Hide the panel after the transition
+    // Show the minimized button after the transition
     setTimeout(() => {
-      if (!this.node.classList.contains('visible')) {
-        this.node.style.display = 'none';
+      this.node.style.display = 'none';
+      this.node.classList.remove('minimizing');
+      this.node.classList.add('minimized');
+      const minimizedButton = this.buttonContainer.querySelector('.minimized-button') as HTMLButtonElement;
+      if (minimizedButton) {
+        minimizedButton.style.display = 'flex';
       }
     }, 300);
   }

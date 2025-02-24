@@ -106,55 +106,46 @@ export const dialogStyles = `
 `;
 
 export const minimizedStyles = `
-  .minimized {
-    position: fixed !important;
-    bottom: 20px !important;
-    right: 20px !important;
-    transform: none !important;
-    border-radius: 50% !important;
-    width: 64px !important;
-    height: 64px !important;
-    padding: 0 !important;
-    cursor: pointer;
-    background: var(--ui-red) !important;
-    border: 3px solid rgba(255, 255, 255, 0.9) !important;
-    box-shadow: 0 4px 16px rgba(231, 19, 45, 0.3) !important;
-    z-index: 999999999 !important;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
-    animation: float 2s infinite ease-in-out;
-  }
-
-  .minimized * {
-    opacity: 0 !important;
-    transition: opacity 0.2s ease;
-  }
-
-  .minimized::after {
-    content: '⚡️';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 20px;
-    opacity: 1 !important;
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
-  }
-
-  .minimized:hover {
-    transform: scale(1.15) !important;
-    box-shadow: 0 6px 24px rgba(231, 19, 45, 0.4) !important;
-    border-color: white !important;
-  }
-
-  .minimized:active {
-    transform: scale(0.95) !important;
-  }
-
   .esp-button-container {
     position: fixed;
     bottom: 2rem;
     right: 2rem;
     z-index: 1000;
+  }
+
+  .minimized-button {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--ui-navy);
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  }
+
+  .minimized-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .minimized-button:active {
+    transform: scale(0.95);
+  }
+
+  .jp-kernel-welcome-panel.minimized .welcome-overlay {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .jp-kernel-welcome-panel.minimizing .welcome-dialog {
+    transform: translate(calc(50vw - 24px), calc(50vh - 24px)) scale(0.1);
+    opacity: 0;
   }
 `;
 
