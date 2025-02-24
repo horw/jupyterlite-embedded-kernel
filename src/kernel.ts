@@ -102,12 +102,22 @@ export class EchoKernel extends BaseKernel {
         if (value) {
           const chunk = decoder.decode(value);
           buffer += chunk;
+          let current_buffer = chunk
           console.log(value)
           console.log(buffer)
           // Check if we've found the start marker
           if (!outputStarted && buffer.includes('######START REQUEST######')) {
             outputStarted = true;
             buffer = buffer.split('######START REQUEST######')[1];
+            current_buffer = buffer
+          }
+
+          if (outputStarted){
+            current_buffer = current_buffer.split('>>')[0];
+            this.stream({
+              name: 'stdout',
+              text: current_buffer
+            });
           }
 
           // If we're collecting output and we see '>>', we're done
@@ -120,7 +130,7 @@ export class EchoKernel extends BaseKernel {
               name: 'stdout',
               text: output + '\n'
             });
-            
+
             break;
           }
         }
@@ -131,7 +141,7 @@ export class EchoKernel extends BaseKernel {
         }
 
         // Small delay to prevent tight loop
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise(resolve => setTimeout(resolve, 20));
       }
 
       return {
