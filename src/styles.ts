@@ -3,7 +3,7 @@ export const globalStyles = `
     --ui-red: #FF3B30;
     --ui-red-dark: #E0321F;
     --ui-red-light: #FF6961;
-    --ui-navy: #1C1C28;
+    --ui-navy: #0A192F;
     --ui-navy-light: #2D2D3A;
     --ui-white: #FFFFFF;
     --ui-gray: #8E8E93;
@@ -30,6 +30,11 @@ export const animations = `
       transform: translateY(0);
     }
   }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
 `;
 
 export const overlayStyles = `
@@ -37,55 +42,66 @@ export const overlayStyles = `
     position: fixed;
     top: 0;
     left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(28, 28, 40, 0.75);
-    backdrop-filter: blur(12px) saturate(180%);
-    z-index: 999;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
     opacity: 0;
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    pointer-events: none;
+    visibility: hidden;
+    transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
   }
 
   .jp-kernel-welcome-panel.visible .welcome-overlay {
     opacity: 1;
-    pointer-events: all;
+    visibility: visible;
   }
 `;
 
 export const dialogStyles = `
   .welcome-dialog {
-    will-change: transform, width, height, border-radius;
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -60%);
-    opacity: 0;
-    background: var(--ui-white);
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 90%;
+    max-width: 500px;
     padding: 2rem;
-    border-radius: 20px;
-    box-shadow: var(--ui-shadow-lg);
-    max-width: 90%;
-    width: 500px;
+    position: relative;
+    transform: translateY(20px);
+    opacity: 0;
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
   }
 
   .jp-kernel-welcome-panel.visible .welcome-dialog {
-    transform: translate(-50%, -50%);
+    transform: translateY(0);
     opacity: 1;
   }
 
-  .jp-kernel-welcome-panel.minimizing .welcome-overlay {
-    opacity: 0;
+  .welcome-title {
+    font-size: 24px;
+    margin: 0 0 1.5rem 0;
+    color: var(--ui-navy);
+    text-align: center;
   }
 
-  .jp-kernel-welcome-panel.minimizing .welcome-dialog {
-    transform: translate(calc(100% - 60px), -20px) scale(0.2);
-    border-radius: 50%;
-    width: 44px;
-    height: 44px;
-    padding: 0;
-    opacity: 1;
+  .close-button {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    padding: 0.5rem;
+    line-height: 1;
+    transition: color 0.2s ease-in-out;
+  }
+
+  .close-button:hover {
+    color: #333;
   }
 `;
 
@@ -132,6 +148,13 @@ export const minimizedStyles = `
 
   .minimized:active {
     transform: scale(0.95) !important;
+  }
+
+  .esp-button-container {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 1000;
   }
 `;
 
@@ -229,6 +252,43 @@ export const cardStyles = `
     transition: color 0.3s ease;
     line-height: 1.4;
   }
+
+  .action-card {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    background: white;
+    border: 1px solid #eee;
+  }
+
+  .action-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .action-card .icon {
+    font-size: 24px;
+    margin-right: 1rem;
+  }
+
+  .action-card .content {
+    flex: 1;
+  }
+
+  .action-card .title {
+    font-weight: bold;
+    margin: 0;
+    color: var(--ui-navy);
+  }
+
+  .action-card .description {
+    margin: 0.25rem 0 0;
+    font-size: 0.9rem;
+    color: #666;
+  }
 `;
 
 export const buttonStyles = `
@@ -263,5 +323,20 @@ export const buttonStyles = `
 
   .close-button:active {
     transform: scale(0.95);
+  }
+
+  .action-button {
+    background: var(--ui-navy);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+  }
+
+  .action-button:hover {
+    background: #1a2f4c;
   }
 `;

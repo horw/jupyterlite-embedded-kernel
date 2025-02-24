@@ -10,7 +10,7 @@ import { DeviceService } from './services/DeviceService';
 import { ErrorHandler } from './utils/ErrorHandler';
 
 // Create WelcomePanel class outside the plugin
-class WelcomePanel extends Widget {
+export default class WelcomePanel extends Widget {
   private buttonContainer: HTMLElement;
   private styleElement: HTMLStyleElement | null = null;
   private firmwareService: FirmwareService;
@@ -21,6 +21,16 @@ class WelcomePanel extends Widget {
     super();
     this.id = 'kernel-welcome-panel';
     this.addClass('jp-kernel-welcome-panel');
+    
+    // Set initial styles
+    this.node.style.position = 'fixed';
+    this.node.style.top = '0';
+    this.node.style.left = '0';
+    this.node.style.width = '100vw';
+    this.node.style.height = '100vh';
+    this.node.style.zIndex = '1000';
+    this.node.style.display = 'none';  // Initially hidden
+
     this.firmwareService = FirmwareService.getInstance();
     this.deviceService = DeviceService.getInstance();
 
@@ -168,16 +178,7 @@ class WelcomePanel extends Widget {
 
   async initUI(kernel: EchoKernel): Promise<void> {
     this.initializeStyles();
-
-    // Try to connect automatically
-    try {
-      await this.deviceService.connect();
-      kernel.transport = this.deviceService.getTransport();
-      console.log('Device connected automatically');
-    } catch (err) {
-      console.error('Failed to connect automatically:', ErrorHandler.getErrorMessage(err));
-      kernel.transport = undefined;
-    }
+    console.log('Initializing UI...');
 
     const overlay = document.createElement('div');
     overlay.className = 'welcome-overlay';
@@ -196,10 +197,10 @@ class WelcomePanel extends Widget {
     closeButton.addEventListener('click', () => this.hide());
 
     const header = document.createElement('div');
-    header.innerHTML = '<h1 class="welcome-title">Select an action</h1>';
+    header.innerHTML = '<h1 class="welcome-title">ESP32 Device Manager</h1>';
 
     const optionsContainer = document.createElement('div');
-    optionsContainer.style.cssText = 'display: flex; flex-direction: column; gap: 0.4rem;';
+    optionsContainer.style.cssText = 'display: flex; flex-direction: column; gap: 1rem;';
 
     // Create cards
     this.connectCard = new Card(this.getConnectCardProps(), () => this.handleConnect());
@@ -229,15 +230,35 @@ class WelcomePanel extends Widget {
     container.appendChild(optionsContainer);
     overlay.appendChild(container);
     this.node.appendChild(overlay);
+
+    // Show the panel immediately after initialization
+    console.log('Showing panel...');
+    this.show();
   }
 
   show(): void {
+    console.log('Showing panel...');
+    this.node.style.display = 'block';
     this.node.classList.add('visible');
+    
+    // Force a reflow to ensure the transition works
+    void this.node.offsetHeight;
+    
+    // Add transition for smooth appearance
+    this.node.style.transition = 'opacity 0.3s ease-in-out';
+    this.node.style.opacity = '1';
   }
 
   hide(): void {
+    console.log('Hiding panel...');
     this.node.classList.remove('visible');
+    this.node.style.opacity = '0';
+    
+    // Hide the panel after the transition
+    setTimeout(() => {
+      if (!this.node.classList.contains('visible')) {
+        this.node.style.display = 'none';
+      }
+    }, 300);
   }
 }
-
-export default WelcomePanel;
