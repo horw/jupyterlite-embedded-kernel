@@ -37,8 +37,19 @@ export class DeviceService {
     }
 
     try {
-      this.transport?.connect()
-      // await this.port.open({ baudRate: 115200 });
+      // Check if already connected
+      if (this.isDeviceConnected) {
+        console.log('Already connected, skipping connection');
+        return;
+      }
+      
+      // Only try to connect if we have a port and it's not already open
+      if (!this.port.readable && !this.port.writable) {
+        this.transport?.connect()
+      } else {
+        console.log('Port is already open, skipping connection');
+      }
+      
       this.isDeviceConnected = true;
     } catch (err) {
       console.error('Failed to connect:', err);
@@ -49,12 +60,24 @@ export class DeviceService {
   async disconnect(): Promise<void> {
     if (this.port && this.port.readable) {
       try {
+        // Check if the readable is locked before closing
+        if (this.port.readable.locked || (this.port.writable && this.port.writable.locked)) {
+          console.warn('Serial port streams are locked, cannot close properly');
+          // We'll still update our internal state
+          this.isDeviceConnected = false;
+          return;
+        }
+        
         await this.port.close();
         this.isDeviceConnected = false;
       } catch (err) {
         console.error('Failed to disconnect:', err);
-        throw err;
+        // Even if close fails, update our internal state
+        this.isDeviceConnected = false;
       }
+    } else {
+      // If there's no readable, just update state
+      this.isDeviceConnected = false;
     }
   }
 
@@ -158,15 +181,27 @@ export class DeviceService {
   }
 
   async readFromDevice(): Promise<IteratorResult<Uint8Array, any>> {
-    if (!this.transport) {
+    if (!this.transport || !this.transport.device.readable) {
+      console.error('Transport not readable in readFromDevice');
       return { value: undefined, done: true };
     }
 
     try {
+      // Check if the reader is already locked
+      if (this.transport.device.readable.locked) {
+        console.warn('Readable stream is locked, returning empty result to avoid errors');
+        // We can't get a new reader if it's locked, so return empty result
+        return { value: new Uint8Array(0), done: false };
+      }
+      
+      // Only try to read if we can get a reader
       const readLoop = this.transport.rawRead();
       return await readLoop.next();
     } catch (error) {
       console.error('Error reading from device:', error);
+      
+      // Don't try to force reconnection here - it might cause more issues
+      // Just let the caller handle the error
       return { value: undefined, done: true };
     }
   }

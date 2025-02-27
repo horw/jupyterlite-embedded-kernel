@@ -31,10 +31,21 @@ export class ConsoleService {
     console.log("[ConsoleService] readAndParseOutput - Starting to read output");
     let buffer = '';
     let outputStarted = false;
-    let timeout = 5000; // 5 second timeout
+    let timeout = 10000; // Increase timeout to 10 seconds
     const startTime = Date.now();
 
     try {
+      // Ensure we can read from the device
+      const transport = this.deviceService.getTransport();
+      if (!transport || !transport.device.readable) {
+        console.error("[ConsoleService] readAndParseOutput - Transport not readable");
+        return {
+          success: false,
+          error: 'Device transport not readable'
+        };
+      }
+
+      console.log("[ConsoleService] readAndParseOutput - Transport is readable, waiting for data");
       while (true) {
         const { text, done } = await this.deviceService.readAndDecodeFromDevice();
         
@@ -132,6 +143,37 @@ export class ConsoleService {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error executing command'
       };
+    }
+  }
+
+  /**
+   * Reset the console by sending a Ctrl+C to interrupt any running process
+   * and attempt to get a clean prompt
+   */
+  async resetConsole(): Promise<void> {
+    console.log("[ConsoleService] resetConsole - Sending reset sequence");
+    try {
+      // Send Ctrl+C to interrupt any running process
+      await this.deviceService.sendInterrupt();
+      
+      // Give it a moment to process
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Send a few newlines to get a clean prompt
+      const encoder = new TextEncoder();
+      const newLine = encoder.encode('\r\n');
+
+      const transport = this.deviceService.getTransport();
+      if (transport && transport.device.writable) {
+        const writer = transport.device.writable.getWriter();
+        await writer.write(newLine);
+        await writer.write(newLine);
+        writer.releaseLock();
+      }
+      
+      console.log("[ConsoleService] resetConsole - Reset sequence complete");
+    } catch (error) {
+      console.error("[ConsoleService] resetConsole - Error during reset:", error);
     }
   }
 }
