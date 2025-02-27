@@ -40,8 +40,9 @@ export class EmbeddedKernel extends BaseKernel {
     content: KernelMessage.IExecuteRequestMsg['content'],
   ): Promise<KernelMessage.IExecuteReplyMsg['content']> {
 
-    console.log("Execute Request this.deviceService == undefined")
+    console.log("[Kernel] executeRequest - Starting execution");
     if (this.deviceService == undefined){
+      console.log("[Kernel] executeRequest - DeviceService is undefined");
       return {
           status: 'error',
           execution_count: this.executionCount,
@@ -51,13 +52,15 @@ export class EmbeddedKernel extends BaseKernel {
         };
     }
 
-    console.log("Execute Request code")
+    console.log("[Kernel] executeRequest - Processing code");
     const { code } = content;
 
     try {
-      console.log("Execute ")
+      console.log("[Kernel] executeRequest - Checking transport");
       const transport = this.deviceService.getTransport();
+      console.log(transport)
       if (!transport) {
+        console.log("[Kernel] executeRequest - No transport available");
         return {
           status: 'error',
           execution_count: this.executionCount,
@@ -67,12 +70,15 @@ export class EmbeddedKernel extends BaseKernel {
         };
       }
       
+      console.log("[Kernel] executeRequest - Executing command via ConsoleService");
       // Execute the command and handle the output
       const result = await this.consoleService.executeCommand(code, (content) => {
+        console.log("[Kernel] executeRequest - Streaming output:", content.text.substring(0, 50) + (content.text.length > 50 ? '...' : ''));
         this.stream(content);
       });
 
       if (!result.success) {
+        console.log("[Kernel] executeRequest - Command execution failed:", result.error);
         return {
           status: 'error',
           execution_count: this.executionCount,
@@ -82,6 +88,7 @@ export class EmbeddedKernel extends BaseKernel {
         };
       }
 
+      console.log("[Kernel] executeRequest - Command executed successfully");
       return {
         status: 'ok',
         execution_count: this.executionCount,
@@ -89,7 +96,7 @@ export class EmbeddedKernel extends BaseKernel {
       };
 
     } catch (error: any) {
-      console.error('Execute error:', error);
+      console.error("[Kernel] executeRequest - Execution error:", error);
       return {
         status: 'error',
         execution_count: this.executionCount,

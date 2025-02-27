@@ -72,7 +72,8 @@ export class FlashService {
       await esploader.writeFlash(flashOptions);
       progressOverlay.setStatus('Flash complete!');
       await new Promise(resolve => setTimeout(resolve, 1000));
-      await this.deviceService.reset()
+      await esploader.after()
+      // await this.deviceService.reset()
     } catch (err) {
       const errorMessage = ErrorHandler.getErrorMessage(err);
       progressOverlay.setStatus(`Flash failed: ${errorMessage}`);
@@ -80,7 +81,7 @@ export class FlashService {
     } finally {
       await progressOverlay.hide();
       // After flashing, clear the port to ensure a fresh start
-      this.deviceService.clearPort();
+      // this.deviceService.clearPort();
     }
   }
 }
