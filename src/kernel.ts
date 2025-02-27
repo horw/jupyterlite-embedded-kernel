@@ -1,13 +1,9 @@
 import { BaseKernel } from '@jupyterlite/kernel';
 import { KernelMessage } from '@jupyterlab/services';
-import { Transport } from 'esptool-js';
 import { DeviceService } from './services/DeviceService';
 
 export class EchoKernel extends BaseKernel {
-  public transport?: Transport;
-  public deviceService: DeviceService;
-  public writer?: WritableStreamDefaultWriter<Uint8Array>; // The serial port writer.
-
+  public deviceService: DeviceService = DeviceService.getInstance();
 
   async kernelInfoRequest(): Promise<KernelMessage.IInfoReplyMsg['content']> {
     const content: KernelMessage.IInfoReply = {
@@ -35,12 +31,15 @@ export class EchoKernel extends BaseKernel {
   }
 
   async interrupt(): Promise<void> {
-    if (this.writer) {
+    const transport = this.deviceService.getTransport();
+    if (transport && transport.device.writable) {
       const ctrl_c = new Uint8Array([3]);
       const encoder = new TextEncoder();
       const new_line = encoder.encode('\r\n');
-      await this.writer.write(ctrl_c);
-      await this.writer.write(new_line);
+      const writer = transport.device.writable.getWriter();
+      await writer.write(ctrl_c);
+      await writer.write(new_line);
+      writer.releaseLock();
     }
   }
 
@@ -49,7 +48,7 @@ export class EchoKernel extends BaseKernel {
   ): Promise<KernelMessage.IExecuteReplyMsg['content']> {
 
     console.log("Execute Request")
-    if (this.deviceService. == undefined){
+    if (this.deviceService == undefined){
       return {
           status: 'error',
           execution_count: this.executionCount,
@@ -69,28 +68,37 @@ export class EchoKernel extends BaseKernel {
     const new_line = encoder.encode('\r\n');
 
     try {
-      // Send the command
-      if (this.writer == undefined){
-        this.writer = this.transport.device.writable?.getWriter();
+      const transport = this.deviceService.getTransport();
+      if (!transport) {
+        return {
+          status: 'error',
+          execution_count: this.executionCount,
+          ename: 'TransportError',
+          evalue: 'No transport available',
+          traceback: ['Please connect a device first']
+        };
       }
-      if (this.writer == undefined){
+      
+      if (!transport.device.writable) {
         return {
           status: 'error',
           execution_count: this.executionCount,
           ename: 'ValueError',
-          evalue: 'Missing Writter firmware URL',
-          traceback: ['Please provide MicroPython firmware URL']
+          evalue: 'Device not writable',
+          traceback: ['Unable to write to device']
         };
       }
-      console.log("Try to write")
-      await this.writer.write(ctrl_e);
-      await this.writer.write(new_line);
+      
+      console.log("Try to write");
+      const writer = transport.device.writable.getWriter();
+      await writer.write(ctrl_e);
+      await writer.write(new_line);
       const data = encoder.encode(code + "######START REQUEST######");
-      console.log(data)
-      await this.writer.write(data);
-      await this.writer.write(ctrl_d);
-      await this.writer.write(new_line);
-
+      console.log(data);
+      await writer.write(data);
+      await writer.write(ctrl_d);
+      await writer.write(new_line);
+      writer.releaseLock();
 
       // Read response with buffering
       let buffer = '';
@@ -99,7 +107,7 @@ export class EchoKernel extends BaseKernel {
       const startTime = Date.now();
 
       while (true) {
-        const readLoop = this.transport.rawRead();
+        const readLoop = transport.rawRead();
         const { value, done } = await readLoop.next();
         
         if (done) break;
