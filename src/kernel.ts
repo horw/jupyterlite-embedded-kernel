@@ -1,9 +1,11 @@
 import { BaseKernel } from '@jupyterlite/kernel';
 import { KernelMessage } from '@jupyterlab/services';
 import { DeviceService } from './services/DeviceService';
+import { ConsoleService } from './services/ConsoleService';
 
 export class EchoKernel extends BaseKernel {
   public deviceService: DeviceService = DeviceService.getInstance();
+  private consoleService: ConsoleService = ConsoleService.getInstance();
 
   async kernelInfoRequest(): Promise<KernelMessage.IInfoReplyMsg['content']> {
     const content: KernelMessage.IInfoReply = {
@@ -31,16 +33,7 @@ export class EchoKernel extends BaseKernel {
   }
 
   async interrupt(): Promise<void> {
-    const transport = this.deviceService.getTransport();
-    if (transport && transport.device.writable) {
-      const ctrl_c = new Uint8Array([3]);
-      const encoder = new TextEncoder();
-      const new_line = encoder.encode('\r\n');
-      const writer = transport.device.writable.getWriter();
-      await writer.write(ctrl_c);
-      await writer.write(new_line);
-      writer.releaseLock();
-    }
+    await this.deviceService.sendInterrupt();
   }
 
   async executeRequest(
@@ -61,12 +54,6 @@ export class EchoKernel extends BaseKernel {
     console.log("Execute Request")
     const { code } = content;
 
-    const encoder = new TextEncoder();
-    const decoder = new TextDecoder();
-    const ctrl_d = new Uint8Array([4]);
-    const ctrl_e = new Uint8Array([5]);
-    const new_line = encoder.encode('\r\n');
-
     try {
       const transport = this.deviceService.getTransport();
       if (!transport) {
@@ -79,75 +66,19 @@ export class EchoKernel extends BaseKernel {
         };
       }
       
-      if (!transport.device.writable) {
+      // Execute the command and handle the output
+      const result = await this.consoleService.executeCommand(code, (content) => {
+        this.stream(content);
+      });
+
+      if (!result.success) {
         return {
           status: 'error',
           execution_count: this.executionCount,
-          ename: 'ValueError',
-          evalue: 'Device not writable',
-          traceback: ['Unable to write to device']
+          ename: 'ExecutionError',
+          evalue: result.error || 'Unknown error',
+          traceback: [result.error || 'Unknown error']
         };
-      }
-      
-      console.log("Try to write");
-      const writer = transport.device.writable.getWriter();
-      await writer.write(ctrl_e);
-      await writer.write(new_line);
-      const data = encoder.encode(code + "######START REQUEST######");
-      console.log(data);
-      await writer.write(data);
-      await writer.write(ctrl_d);
-      await writer.write(new_line);
-      writer.releaseLock();
-
-      // Read response with buffering
-      let buffer = '';
-      let outputStarted = false;
-      let timeout = 5000; // 5 second timeout
-      const startTime = Date.now();
-
-      while (true) {
-        const readLoop = transport.rawRead();
-        const { value, done } = await readLoop.next();
-        
-        if (done) break;
-        
-        if (value) {
-          const chunk = decoder.decode(value);
-          buffer += chunk;
-          let current_buffer = chunk
-          console.log(value)
-          console.log(buffer)
-          // Check if we've found the start marker
-          if (!outputStarted && buffer.includes('######START REQUEST######')) {
-            outputStarted = true;
-            buffer = buffer.split('######START REQUEST######')[1];
-            current_buffer = buffer
-          }
-
-          if (outputStarted){
-            current_buffer = current_buffer.split('>>')[0];
-            this.stream({
-              name: 'stdout',
-              text: current_buffer
-            });
-          }
-
-          // If we're collecting output and we see '>>', we're done
-          if (outputStarted && buffer.includes('>>>')) {
-            const output = buffer.split('>>>')[0].trim();
-            console.log('Output:', output);
-            break;
-          }
-        }
-
-        // Check for timeout
-        if (Date.now() - startTime > timeout) {
-          throw new Error('Command execution timed out');
-        }
-
-        // Small delay to prevent tight loop
-        await new Promise(resolve => setTimeout(resolve, 20));
       }
 
       return {

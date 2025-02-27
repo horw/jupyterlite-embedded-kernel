@@ -5,6 +5,7 @@ export class DeviceService {
   private port: SerialPort | null = null;
   private transport: Transport | null = null;
   private isDeviceConnected: boolean = false;
+  private decoder: TextDecoder = new TextDecoder();
 
   private constructor() {}
 
@@ -84,5 +85,104 @@ export class DeviceService {
     this.port = null;
     this.transport = null;
     this.isDeviceConnected = false;
+  }
+
+  async writeToDevice(data: Uint8Array): Promise<boolean> {
+    if (!this.transport || !this.transport.device.writable) {
+      return false;
+    }
+
+    try {
+      const writer = this.transport.device.writable.getWriter();
+      await writer.write(data);
+      writer.releaseLock();
+      return true;
+    } catch (error) {
+      console.error('Error writing to device:', error);
+      return false;
+    }
+  }
+
+  async sendCommand(code: string): Promise<boolean> {
+    if (!this.transport || !this.transport.device.writable) {
+      return false;
+    }
+
+    try {
+      const encoder = new TextEncoder();
+      const ctrl_d = new Uint8Array([4]);
+      const ctrl_e = new Uint8Array([5]);
+      const new_line = encoder.encode('\r\n');
+      
+      const writer = this.transport.device.writable.getWriter();
+      
+      // Send Ctrl+E to enter paste mode
+      await writer.write(ctrl_e);
+      await writer.write(new_line);
+      
+      // Send the code with a marker
+      const data = encoder.encode(code + "######START REQUEST######");
+      await writer.write(data);
+      
+      // Send Ctrl+D to execute
+      await writer.write(ctrl_d);
+      await writer.write(new_line);
+      
+      writer.releaseLock();
+      return true;
+    } catch (error) {
+      console.error('Error sending command to device:', error);
+      return false;
+    }
+  }
+
+  async sendInterrupt(): Promise<boolean> {
+    if (!this.transport || !this.transport.device.writable) {
+      return false;
+    }
+
+    try {
+      const encoder = new TextEncoder();
+      const ctrl_c = new Uint8Array([3]);
+      const new_line = encoder.encode('\r\n');
+      
+      const writer = this.transport.device.writable.getWriter();
+      await writer.write(ctrl_c);
+      await writer.write(new_line);
+      writer.releaseLock();
+      return true;
+    } catch (error) {
+      console.error('Error sending interrupt to device:', error);
+      return false;
+    }
+  }
+
+  async readFromDevice(): Promise<IteratorResult<Uint8Array, any>> {
+    if (!this.transport) {
+      return { value: undefined, done: true };
+    }
+
+    try {
+      const readLoop = this.transport.rawRead();
+      return await readLoop.next();
+    } catch (error) {
+      console.error('Error reading from device:', error);
+      return { value: undefined, done: true };
+    }
+  }
+
+  async readAndDecodeFromDevice(): Promise<{ text: string, done: boolean }> {
+    const { value, done } = await this.readFromDevice();
+    
+    if (done || !value) {
+      return { text: '', done: true };
+    }
+    
+    const text = this.decoder.decode(value);
+    return { text, done: false };
+  }
+
+  decodeValue(value: Uint8Array): string {
+    return this.decoder.decode(value);
   }
 }
