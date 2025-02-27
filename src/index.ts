@@ -1,7 +1,7 @@
 import { Widget } from '@lumino/widgets';
 import { JupyterLiteServer, JupyterLiteServerPlugin } from '@jupyterlite/server';
 import { IKernel, IKernelSpecs } from '@jupyterlite/kernel';
-import { EchoKernel } from './kernel';
+import { EmbeddedKernel } from './kernel';
 import WelcomePanel from './panel';
 
 // Kernel plugin for the embedded kernel
@@ -10,7 +10,7 @@ const kernelPlugin: JupyterLiteServerPlugin<void> = {
   autoStart: true,
   requires: [IKernelSpecs],
   activate: (app: JupyterLiteServer, kernelspecs: IKernelSpecs) => {
-    const activeKernels = new Map<string, EchoKernel>();
+    const activeKernels = new Map<string, EmbeddedKernel>();
 
     const welcomePanel = new WelcomePanel();
     Widget.attach(welcomePanel, document.body);
@@ -41,7 +41,7 @@ const kernelPlugin: JupyterLiteServerPlugin<void> = {
         },
       },
       create: async (options: IKernel.IOptions): Promise<IKernel> => {
-        const kernel = new EchoKernel(options);
+        const kernel = new EmbeddedKernel(options);
 
         await welcomePanel.initUI(kernel);
         welcomePanel.show();

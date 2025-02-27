@@ -1,5 +1,5 @@
 import { Widget } from '@lumino/widgets';
-import { EchoKernel } from './kernel';
+import { EmbeddedKernel } from './kernel';
 import { globalStyles, animations, overlayStyles, dialogStyles, minimizedStyles, cardStyles, buttonStyles } from './styles';
 import { CardProps } from './components/Card';
 import { FirmwareService } from './services/FirmwareService';
@@ -92,7 +92,7 @@ export default class WelcomePanel extends Widget {
     }
   }
 
-  async initUI(kernel: EchoKernel): Promise<void> {
+  async initUI(kernel: EmbeddedKernel): Promise<void> {
     this.overlay = new Overlay(() => this.hide());
     this.dialog = new Dialog({
       onClose: () => this.hide(),

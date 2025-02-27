@@ -3,7 +3,7 @@ import { KernelMessage } from '@jupyterlab/services';
 import { DeviceService } from './services/DeviceService';
 import { ConsoleService } from './services/ConsoleService';
 
-export class EchoKernel extends BaseKernel {
+export class EmbeddedKernel extends BaseKernel {
   public deviceService: DeviceService = DeviceService.getInstance();
   private consoleService: ConsoleService = ConsoleService.getInstance();
 
@@ -40,7 +40,7 @@ export class EchoKernel extends BaseKernel {
     content: KernelMessage.IExecuteRequestMsg['content'],
   ): Promise<KernelMessage.IExecuteReplyMsg['content']> {
 
-    console.log("Execute Request")
+    console.log("Execute Request this.deviceService == undefined")
     if (this.deviceService == undefined){
       return {
           status: 'error',
@@ -51,7 +51,7 @@ export class EchoKernel extends BaseKernel {
         };
     }
 
-    console.log("Execute Request")
+    console.log("Execute Request code")
     const { code } = content;
 
     try {
