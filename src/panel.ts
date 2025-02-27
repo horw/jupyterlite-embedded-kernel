@@ -1,6 +1,6 @@
 import { Widget } from '@lumino/widgets';
 import { EmbeddedKernel } from './kernel';
-import { globalStyles, animations, overlayStyles, dialogStyles, minimizedStyles, cardStyles, buttonStyles } from './styles';
+import { globalStyles, animations, overlayStyles, dialogStyles, minimizedStyles, cardStyles, buttonStyles, progressOverlayStyles } from './styles';
 import { CardProps } from './components/Card';
 import { FirmwareService } from './services/FirmwareService';
 import { DeviceService } from './services/DeviceService';
@@ -54,7 +54,8 @@ export default class WelcomePanel extends Widget {
       dialogStyles,
       minimizedStyles,
       cardStyles,
-      buttonStyles
+      buttonStyles,
+      progressOverlayStyles
     ]);
 
     // Try to load cached firmware

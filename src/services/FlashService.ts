@@ -46,11 +46,11 @@ export class FlashService {
       progressOverlay.setStatus('Connecting to device...');
       await esploader.main();
 
-      let firmwareString = this.firmwareService.getFirmwareString();
-      if (!firmwareString) {
-        progressOverlay.setStatus('Downloading firmware...');
-        firmwareString = await this.firmwareService.downloadFirmware();
-      }
+      // let firmwareString = this.firmwareService.getFirmwareString();
+      // if (!firmwareString) {
+      progressOverlay.setStatus('Downloading firmware...');
+      let firmwareString = await this.firmwareService.downloadFirmware();
+      // }
 
       const flashOptions = {
         fileArray: [{
@@ -72,6 +72,7 @@ export class FlashService {
       await esploader.writeFlash(flashOptions);
       progressOverlay.setStatus('Flash complete!');
       await new Promise(resolve => setTimeout(resolve, 1000));
+      await this.deviceService.reset()
     } catch (err) {
       const errorMessage = ErrorHandler.getErrorMessage(err);
       progressOverlay.setStatus(`Flash failed: ${errorMessage}`);

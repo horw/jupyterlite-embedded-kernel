@@ -55,6 +55,7 @@ export class EmbeddedKernel extends BaseKernel {
     const { code } = content;
 
     try {
+      console.log("Execute ")
       const transport = this.deviceService.getTransport();
       if (!transport) {
         return {

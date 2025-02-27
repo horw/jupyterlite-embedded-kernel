@@ -60,6 +60,64 @@ export const overlayStyles = `
   }
 `;
 
+export const progressOverlayStyles = `
+  .progress-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .progress-overlay.visible {
+    opacity: 1;
+  }
+
+  .progress-container {
+    background: white;
+    border-radius: 8px;
+    padding: 24px;
+    width: 400px;
+    max-width: 90%;
+    box-shadow: var(--ui-shadow-lg);
+  }
+
+  .progress-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--ui-navy);
+  }
+
+  .progress-bar-container {
+    height: 8px;
+    background: var(--ui-gray-light);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+
+  .progress-bar {
+    height: 100%;
+    background: var(--ui-red);
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+
+  .progress-status {
+    font-size: 14px;
+    color: var(--ui-gray);
+    margin-top: 8px;
+  }
+`;
+
 export const dialogStyles = `
   .welcome-dialog {
     background: white;
