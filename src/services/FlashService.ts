@@ -58,7 +58,8 @@ export class FlashService {
 
         console.log('Stream state before esploader.main():', {
           readLocked,
-          writeLocked
+          writeLocked,
+          port
         });
       }
       progressOverlay.setStatus('Connecting to device...');
@@ -71,8 +72,13 @@ export class FlashService {
 
         console.log('Stream state after esploader.main():', {
           readLocked,
-          writeLocked
-        });
+          writeLocked,
+          port,
+        },
+          esploader.transport.device
+        );
+
+        // await port.close()
       }
 
       // Extract device type from the device info string
@@ -202,7 +208,7 @@ export class FlashService {
       } catch (afterError) {
         console.warn('Error during esploader.after():', afterError);
       }
-      
+
       // Try to gracefully reset rather than disconnect/connect
       try {
         // Check stream state before device reset
@@ -232,7 +238,8 @@ export class FlashService {
 
       // Add delay before attempting disconnect
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
+      await transport.disconnect();
       try {
         // Check stream state before disconnect
         const transportBeforeDisconnect = this.deviceService.getTransport();
@@ -255,14 +262,16 @@ export class FlashService {
         } else {
           progressOverlay.setStatus('Cleaning up connections...');
         }
-        
-        await this.deviceService.disconnect();
-        this.deviceService.clearPort();
+
       } catch (disconnectError) {
         console.warn('Error during device disconnect:', disconnectError);
-        // Continue anyway as we're done with flashing
       }
 
+      console.warn('Reconnect...');
+      await transport.connect()
+      await this.deviceService.reset();
+
+      console.warn('Device reset...');
     } catch (err) {
       const errorMessage = ErrorHandler.getErrorMessage(err);
       progressOverlay.setStatus(`Flash failed: ${errorMessage}`);
