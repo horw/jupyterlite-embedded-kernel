@@ -41,7 +41,9 @@ export class FlashService {
         throw new Error('Failed to get device transport');
       }
 
-      progressOverlay.show();
+      // Get the current firmware and show progress with firmware info
+      const currentFirmware = this.firmwareService.getSelectedFirmwareId();
+      progressOverlay.show(currentFirmware);
       const loaderOptions = {
         transport: transport,
         baudrate: 921600,
@@ -88,10 +90,14 @@ export class FlashService {
             this.firmwareService.setSelectedFirmwareId(targetFirmware);
             
             console.log(`✓ Auto-detection: Using ${targetFirmware} firmware for ${chipType}`);
+            
+            // Update both the status and title with the auto-detected firmware info
             progressOverlay.setStatus(`Auto-detected ${chipType}. Using ${targetFirmware} firmware...`);
+            progressOverlay.setTitle(`Flashing ${targetFirmware} Firmware...`);
           } else {
             console.log(`⚠️ Manual firmware selection: Using ${currentSelection} firmware (device: ${chipType})`);
             progressOverlay.setStatus(`Using manually selected ${currentSelection} firmware...`);
+            progressOverlay.setTitle(`Flashing ${currentSelection} Firmware...`);
           }
         } else {
           console.warn(`⚠️ Could not determine chip type from device info. Using default firmware.`);

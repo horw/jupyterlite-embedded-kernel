@@ -94,6 +94,15 @@ export const progressOverlayStyles = `
     font-weight: 600;
     margin-bottom: 16px;
     color: var(--ui-navy);
+    display: flex;
+    align-items: center;
+  }
+  
+  /* Styling for firmware name in progress title */
+  .progress-title .firmware-name {
+    color: var(--ui-red);
+    font-weight: 700;
+    margin: 0 4px;
   }
 
   .progress-bar-container {

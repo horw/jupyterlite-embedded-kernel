@@ -2,6 +2,7 @@ export class ProgressOverlay {
   private element: HTMLElement;
   private progressBar: HTMLElement;
   private statusEl: HTMLElement;
+  private titleEl: HTMLElement;
 
   constructor() {
     this.element = document.createElement('div');
@@ -18,13 +19,26 @@ export class ProgressOverlay {
 
     this.progressBar = this.element.querySelector('.progress-bar') as HTMLElement;
     this.statusEl = this.element.querySelector('.progress-status') as HTMLElement;
+    this.titleEl = this.element.querySelector('.progress-title') as HTMLElement;
   }
 
-  show(): void {
+  show(firmwareId?: string): void {
     document.body.appendChild(this.element);
+    
+    // Update title with firmware information if provided
+    if (firmwareId) {
+      this.setTitle(`Flashing ${firmwareId} Firmware...`);
+    }
+    
     requestAnimationFrame(() => {
       this.element.classList.add('visible');
     });
+    
+    // Dispatch flashStart event with firmware info
+    const flashStartEvent = new CustomEvent('flashStart', {
+      detail: { firmware: firmwareId || 'selected' }
+    });
+    document.dispatchEvent(flashStartEvent);
   }
 
   async hide(): Promise<void> {
@@ -41,5 +55,23 @@ export class ProgressOverlay {
 
   setStatus(status: string): void {
     this.statusEl.textContent = status;
+  }
+  
+  setTitle(title: string): void {
+    // Check if this is a firmware flashing title
+    if (title.includes('Flashing') && title.includes('Firmware')) {
+      // Extract the firmware name from between 'Flashing ' and ' Firmware...'
+      const match = title.match(/Flashing (.+?) Firmware\.\.\./i);
+      
+      if (match && match[1]) {
+        const firmwareName = match[1];
+        // Use HTML to highlight the firmware name
+        this.titleEl.innerHTML = `Flashing <span class="firmware-name">${firmwareName}</span> Firmware...`;
+      } else {
+        this.titleEl.textContent = title;
+      }
+    } else {
+      this.titleEl.textContent = title;
+    }
   }
 }
