@@ -5,6 +5,7 @@ export class DeviceService {
   private port: SerialPort | null = null;
   private transport: Transport | null = null;
   private isDeviceConnected: boolean = false;
+  private deviceType: string = '';
   private decoder: TextDecoder = new TextDecoder();
 
   private constructor() {}
@@ -102,6 +103,15 @@ export class DeviceService {
 
   isConnected(): boolean {
     return this.isDeviceConnected;
+  }
+  
+  setDeviceType(type: string): void {
+    this.deviceType = type;
+    console.log(`Device type set to: ${type}`);
+  }
+  
+  getDeviceType(): string {
+    return this.deviceType;
   }
 
   clearPort(): void {

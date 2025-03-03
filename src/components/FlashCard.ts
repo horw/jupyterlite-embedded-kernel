@@ -1,14 +1,18 @@
 import { Card, CardProps } from './Card';
 import { FirmwareService } from '../services/FirmwareService';
+import { DeviceService } from '../services/DeviceService';
 
 export class FlashCard extends Card {
   private firmwareService: FirmwareService;
+  private deviceService: DeviceService;
   private dropdown!: HTMLSelectElement;
   private cardContent!: HTMLDivElement;
+  private deviceInfoElement: HTMLDivElement | null = null;
 
   constructor(props: CardProps, onClick: () => void) {
     super(props, onClick);
     this.firmwareService = FirmwareService.getInstance();
+    this.deviceService = DeviceService.getInstance();
     
     setTimeout(() => this.initializeFlashCard(), 0);
   }
@@ -48,6 +52,11 @@ export class FlashCard extends Card {
       const dropdownContainer = document.createElement('div');
       dropdownContainer.className = 'firmware-dropdown-container';
       
+      // Create a device info element to show detected device
+      this.deviceInfoElement = document.createElement('div');
+      this.deviceInfoElement.className = 'device-info';
+      this.updateDeviceInfo();
+      
       // Create a label for the dropdown
       const label = document.createElement('label');
       label.className = 'firmware-dropdown-label';
@@ -66,12 +75,30 @@ export class FlashCard extends Card {
         this.dropdown.appendChild(optionElement);
       });
     
-      // Set the selected option based on the current firmware service state
-      this.dropdown.value = this.firmwareService.getSelectedFirmwareId();
+      // Try to select the appropriate firmware based on detected device
+      const deviceType = this.deviceService.getDeviceType();
+      if (deviceType) {
+        // Auto-select firmware based on device type
+        if (deviceType.includes('C6')) {
+          this.dropdown.value = 'esp32-c6';
+          this.firmwareService.setSelectedFirmwareId('esp32-c6');
+        } else if (deviceType.includes('C3')) {
+          this.dropdown.value = 'esp32-c3';
+          this.firmwareService.setSelectedFirmwareId('esp32-c3');
+        } else if (deviceType.includes('ESP32')) {
+          this.dropdown.value = 'esp32';
+          this.firmwareService.setSelectedFirmwareId('esp32');
+        }
+      } else {
+        // If no device detected, use the stored preference
+        this.dropdown.value = this.firmwareService.getSelectedFirmwareId();
+      }
       
       // Add event listener for selection change
       this.dropdown.addEventListener('change', () => {
         this.firmwareService.setSelectedFirmwareId(this.dropdown.value);
+        // Update device info when selection changes
+        this.updateDeviceInfo();
       });
       
       // Append label and dropdown to the container
@@ -86,8 +113,11 @@ export class FlashCard extends Card {
       const divider = document.createElement('div');
       divider.className = 'firmware-divider';
       
-      // Append the divider and dropdown container to the firmware section
+      // Append the divider, device info, and dropdown container to the firmware section
       firmwareSection.appendChild(divider);
+      if (this.deviceInfoElement) {
+        firmwareSection.appendChild(this.deviceInfoElement);
+      }
       firmwareSection.appendChild(dropdownContainer);
       
       // Append the firmware section to the card content
@@ -105,6 +135,41 @@ export class FlashCard extends Card {
         event.stopPropagation();
       });
     }
+  }
+  
+  private updateDeviceInfo(): void {
+    if (!this.deviceInfoElement) return;
+    
+    const deviceType = this.deviceService.getDeviceType();
+    const selectedFirmware = this.firmwareService.getSelectedFirmwareId();
+    
+    if (deviceType) {
+      // Device is detected
+      this.deviceInfoElement.innerHTML = `
+        <div class="device-detected">
+          <span class="device-icon">🔍</span>
+          <span>Detected: <strong>${deviceType}</strong></span>
+        </div>
+      `;
+    } else if (selectedFirmware === 'Auto') {
+      // Auto detection is selected but no device detected yet
+      this.deviceInfoElement.innerHTML = `
+        <div class="device-auto-mode">
+          <span class="device-icon">⏳</span>
+          <span>Connect device for auto-detection</span>
+        </div>
+      `;
+    } else {
+      // No device detected and a specific firmware is selected
+      this.deviceInfoElement.innerHTML = `
+        <div class="device-not-detected">
+          <span class="device-icon">ℹ️</span>
+          <span>No device detected yet</span>
+        </div>
+      `;
+    }
+    
+    this.deviceInfoElement.style.display = 'block';
   }
 
   // Completely override the update method for FlashCard

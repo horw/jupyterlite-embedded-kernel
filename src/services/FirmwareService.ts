@@ -1,3 +1,5 @@
+import { DeviceService } from './DeviceService';
+
 export interface FirmwareOption {
   id: string;
   name: string;
@@ -6,12 +8,18 @@ export interface FirmwareOption {
 
 export class FirmwareService {
   private static instance: FirmwareService;
+  private deviceService: DeviceService;
   private firmwareString: string | null = null;
   private firmwareBlob: Blob | null = null;
-  private selectedFirmwareId: string = 'esp32-c3';
+  private selectedFirmwareId: string = 'Auto';
   
   // Available firmware options
   private firmwareOptions: FirmwareOption[] = [
+    {
+      id: 'Auto',
+      name: "Auto detection",
+      url: ''
+    },
     {
       id: 'esp32',
       name: 'ESP32',
@@ -29,7 +37,9 @@ export class FirmwareService {
     }
   ];
 
-  private constructor() {}
+  private constructor() {
+    this.deviceService = DeviceService.getInstance();
+  }
 
   static getInstance(): FirmwareService {
     if (!FirmwareService.instance) {
@@ -72,10 +82,42 @@ export class FirmwareService {
     if (savedFirmwareId) {
       this.selectedFirmwareId = savedFirmwareId;
     }
-
-    const selectedFirmware = this.firmwareOptions.find(option => option.id === this.selectedFirmwareId);
-    if (!selectedFirmware) {
-      throw new Error(`Invalid firmware selection: ${this.selectedFirmwareId}`);
+    
+    // Handle Auto detection mode
+    if (this.selectedFirmwareId === 'Auto') {
+      return this.downloadAutoDetectedFirmware();
+    } else {
+      return this.downloadSpecificFirmware(this.selectedFirmwareId);
+    }
+  }
+  
+  private async downloadAutoDetectedFirmware(): Promise<string> {
+    // Get device type from DeviceService
+    const deviceType = this.deviceService.getDeviceType();
+    let firmwareId: string;
+    
+    if (!deviceType) {
+      console.warn('No device detected for auto firmware detection. Using generic ESP32 firmware.');
+      firmwareId = 'esp32';
+    } else if (deviceType.includes('C6')) {
+      console.log('Auto-detected ESP32-C6, using corresponding firmware');
+      firmwareId = 'esp32-c6';
+    } else if (deviceType.includes('C3')) {
+      console.log('Auto-detected ESP32-C3, using corresponding firmware');
+      firmwareId = 'esp32-c3';
+    } else {
+      console.log('Auto-detected generic ESP32, using corresponding firmware');
+      firmwareId = 'esp32';
+    }
+    
+    // Download the detected firmware
+    return this.downloadSpecificFirmware(firmwareId);
+  }
+  
+  private async downloadSpecificFirmware(firmwareId: string): Promise<string> {
+    const selectedFirmware = this.firmwareOptions.find(option => option.id === firmwareId);
+    if (!selectedFirmware || !selectedFirmware.url) {
+      throw new Error(`Invalid firmware selection or no URL for: ${firmwareId}`);
     }
 
     const result = await fetch(selectedFirmware.url, {

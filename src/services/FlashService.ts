@@ -50,7 +50,27 @@ export class FlashService {
       const esploader = new ESPLoader(loaderOptions);
 
       progressOverlay.setStatus('Connecting to device...');
-      await esploader.main();
+      const deviceInfo = await esploader.main();
+      console.log("[flashDevice] current device is", deviceInfo);
+      
+      // Extract device type from the device info string
+      if (deviceInfo) {
+        // Extract the chip type (e.g., ESP32-C6, ESP32-C3, ESP32)
+        const match = deviceInfo.match(/ESP32[-\w]*/i);
+        if (match) {
+          const chipType = match[0].toUpperCase();
+          this.deviceService.setDeviceType(chipType);
+          
+          // Set firmware to match the detected chip
+          if (chipType.includes('C6')) {
+            this.firmwareService.setSelectedFirmwareId('esp32-c6');
+          } else if (chipType.includes('C3')) {
+            this.firmwareService.setSelectedFirmwareId('esp32-c3');
+          } else {
+            this.firmwareService.setSelectedFirmwareId('esp32');
+          }
+        }
+      }
 
       progressOverlay.setStatus('Downloading firmware...');
       let firmwareString = await this.firmwareService.downloadFirmware();

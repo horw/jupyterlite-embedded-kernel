@@ -150,6 +150,54 @@ export const dialogStyles = `
     margin: 0.5rem 0;
   }
   
+  .device-info {
+    margin: 0.5rem 0;
+    font-size: 0.85rem;
+    color: var(--ui-gray-darker);
+  }
+  
+  .device-detected, .device-not-detected, .device-auto-mode {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    border-radius: 4px;
+    background-color: rgba(0, 0, 0, 0.03);
+    margin-bottom: 0.5rem;
+  }
+  
+  .device-detected {
+    color: var(--ui-navy);
+    border-left: 3px solid var(--ui-green);
+  }
+  
+  .device-not-detected {
+    color: var(--ui-gray-darker);
+    border-left: 3px solid var(--ui-gray);
+  }
+  
+  .device-auto-mode {
+    color: var(--ui-navy);
+    border-left: 3px solid var(--ui-blue);
+    animation: pulse 2s infinite;
+  }
+  
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(0, 122, 255, 0.1);
+    }
+    70% {
+      box-shadow: 0 0 0 6px rgba(0, 122, 255, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(0, 122, 255, 0);
+    }
+  }
+  
+  .device-icon {
+    margin-right: 0.5rem;
+    font-size: 1rem;
+  }
+  
   .firmware-dropdown-container {
     margin-top: 0.5rem;
     width: 100%;
