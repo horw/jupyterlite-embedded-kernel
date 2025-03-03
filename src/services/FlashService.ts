@@ -51,10 +51,30 @@ export class FlashService {
       };
       const esploader = new ESPLoader(loaderOptions);
 
+      if (transport && transport.device) {
+        const port = transport.device;
+        const readLocked = port.readable ? port.readable.locked || false : false;
+        const writeLocked = port.writable ? port.writable.locked || false : false;
+
+        console.log('Stream state before esploader.main():', {
+          readLocked,
+          writeLocked
+        });
+      }
       progressOverlay.setStatus('Connecting to device...');
       const deviceInfo = await esploader.main();
       console.log("[flashDevice] current device is", deviceInfo);
-      
+      if (transport && transport.device) {
+        const port = transport.device;
+        const readLocked = port.readable ? port.readable.locked || false : false;
+        const writeLocked = port.writable ? port.writable.locked || false : false;
+
+        console.log('Stream state after esploader.main():', {
+          readLocked,
+          writeLocked
+        });
+      }
+
       // Extract device type from the device info string
       if (deviceInfo) {
         // Extract the chip type (e.g., ESP32-C6, ESP32-C3, ESP32)
@@ -124,12 +144,34 @@ export class FlashService {
         calculateMD5Hash: (image: string) => CryptoJS.MD5(CryptoJS.enc.Latin1.parse(image)).toString()
       };
 
+      if (transport && transport.device) {
+        const port = transport.device;
+        const readLocked = port.readable ? port.readable.locked || false : false;
+        const writeLocked = port.writable ? port.writable.locked || false : false;
+
+        console.log('Stream state before flashing:', {
+          readLocked,
+          writeLocked
+        });
+      }
+
       await esploader.writeFlash(flashOptions);
       progressOverlay.setStatus('Flash complete!');
       
-      // Reset to Auto mode for next flash
-      this.firmwareService.resetToAutoMode();
-      
+      // Check if streams are locked after flashing
+      if (transport && transport.device) {
+        const port = transport.device;
+        const readLocked = port.readable ? port.readable.locked || false : false;
+        const writeLocked = port.writable ? port.writable.locked || false : false;
+        
+        console.log('Stream state after flashing:', {
+          readLocked,
+          writeLocked
+        });
+        
+        progressOverlay.setStatus(`Flash complete! Streams: Read ${readLocked ? 'LOCKED' : 'unlocked'}, Write ${writeLocked ? 'LOCKED' : 'unlocked'}`);
+      }
+
       // Dispatch event that flash is complete
       const flashCompleteEvent = new CustomEvent('flashComplete', {
         detail: { success: true }
@@ -142,12 +184,41 @@ export class FlashService {
       console.log('Hard resetting via RTS pin...');
       try {
         await esploader.after();
+        
+        // Check if streams are locked after esploader.after()
+        const transportAfter = this.deviceService.getTransport();
+        if (transportAfter && transportAfter.device) {
+          const port = transportAfter.device;
+          const readLocked = port.readable ? port.readable.locked || false : false;
+          const writeLocked = port.writable ? port.writable.locked || false : false;
+          
+          console.log('Stream state after esploader.after():', {
+            readLocked,
+            writeLocked
+          });
+          
+          progressOverlay.setStatus(`After ESP reset. Streams: Read ${readLocked ? 'LOCKED' : 'unlocked'}, Write ${writeLocked ? 'LOCKED' : 'unlocked'}`);
+        }
       } catch (afterError) {
         console.warn('Error during esploader.after():', afterError);
       }
       
       // Try to gracefully reset rather than disconnect/connect
       try {
+        // Check stream state before device reset
+        const transportBeforeReset = this.deviceService.getTransport();
+        if (transportBeforeReset && transportBeforeReset.device) {
+          const port = transportBeforeReset.device;
+          const readLocked = port.readable ? port.readable.locked || false : false;
+          const writeLocked = port.writable ? port.writable.locked || false : false;
+          
+          console.log('Stream state before device reset:', {
+            readLocked,
+            writeLocked
+          });
+        }
+        
+        progressOverlay.setStatus('Resetting device...');
         await this.deviceService.reset();
         await new Promise(resolve => setTimeout(resolve, 1000));
         
@@ -159,8 +230,38 @@ export class FlashService {
         console.warn('Error during device reset:', resetError);
       }
 
-      await this.deviceService.disconnect();
-      this.deviceService.clearPort();
+      // Add delay before attempting disconnect
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      try {
+        // Check stream state before disconnect
+        const transportBeforeDisconnect = this.deviceService.getTransport();
+        if (transportBeforeDisconnect && transportBeforeDisconnect.device) {
+          const port = transportBeforeDisconnect.device;
+          const readLocked = port.readable ? port.readable.locked || false : false;
+          const writeLocked = port.writable ? port.writable.locked || false : false;
+          
+          console.log('Stream state before disconnect:', {
+            readLocked,
+            writeLocked
+          });
+          
+          progressOverlay.setStatus(`Cleaning up... Streams: Read ${readLocked ? 'LOCKED' : 'unlocked'}, Write ${writeLocked ? 'LOCKED' : 'unlocked'}`);
+          // Add a longer delay if streams are locked
+          if (readLocked || writeLocked) {
+            console.log('Waiting for streams to unlock before disconnect...');
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        } else {
+          progressOverlay.setStatus('Cleaning up connections...');
+        }
+        
+        await this.deviceService.disconnect();
+        this.deviceService.clearPort();
+      } catch (disconnectError) {
+        console.warn('Error during device disconnect:', disconnectError);
+        // Continue anyway as we're done with flashing
+      }
 
     } catch (err) {
       const errorMessage = ErrorHandler.getErrorMessage(err);

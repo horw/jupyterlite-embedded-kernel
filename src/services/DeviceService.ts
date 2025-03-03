@@ -59,25 +59,30 @@ export class DeviceService {
   }
 
   async disconnect(): Promise<void> {
-    if (this.port && this.port.readable) {
+    if (this.port) {
       try {
-        // Check if the readable is locked before closing
-        if (this.port.readable.locked || (this.port.writable && this.port.writable.locked)) {
-          console.warn('Serial port streams are locked, cannot close properly');
-          // We'll still update our internal state
+        // First check if streams are locked
+        if ((this.port.readable && this.port.readable.locked) || 
+            (this.port.writable && this.port.writable.locked)) {
+          console.warn('Serial port has locked streams. Cannot close directly.');
+          
+          // Cannot close a locked port, so just mark as disconnected
           this.isDeviceConnected = false;
+          // Don't set this.port to null so that existing operations can complete
           return;
         }
         
+        // If streams aren't locked, close properly
         await this.port.close();
-        this.isDeviceConnected = false;
+        console.log('Device disconnected successfully');
       } catch (err) {
         console.error('Failed to disconnect:', err);
-        // Even if close fails, update our internal state
+      } finally {
+        // Always mark as disconnected
         this.isDeviceConnected = false;
       }
     } else {
-      // If there's no readable, just update state
+      // If there's no port, just update state
       this.isDeviceConnected = false;
     }
   }
@@ -115,8 +120,13 @@ export class DeviceService {
   }
 
   clearPort(): void {
-    this.port = null;
-    this.transport = null;
+    // First check if we really have a port to clear
+    if (this.port) {
+      // Only log if we're actually clearing something
+      console.log('Clearing device port reference');
+      this.port = null;
+      this.transport = null;
+    }
     this.isDeviceConnected = false;
   }
 
