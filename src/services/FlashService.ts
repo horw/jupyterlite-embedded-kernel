@@ -44,7 +44,7 @@ export class FlashService {
       progressOverlay.show();
       const loaderOptions = {
         transport: transport,
-        baudrate: 115600,
+        baudrate: 921600,
         romBaudrate: 115600
       };
       const esploader = new ESPLoader(loaderOptions);
@@ -96,6 +96,10 @@ export class FlashService {
       } catch (resetError) {
         console.warn('Error during device reset:', resetError);
       }
+
+      await this.deviceService.disconnect();
+      this.deviceService.clearPort();
+
     } catch (err) {
       const errorMessage = ErrorHandler.getErrorMessage(err);
       progressOverlay.setStatus(`Flash failed: ${errorMessage}`);

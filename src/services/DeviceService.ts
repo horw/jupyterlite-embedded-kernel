@@ -187,14 +187,6 @@ export class DeviceService {
     }
 
     try {
-      // Check if the reader is already locked
-      if (this.transport.device.readable.locked) {
-        console.warn('Readable stream is locked, returning empty result to avoid errors');
-        // We can't get a new reader if it's locked, so return empty result
-        return { value: new Uint8Array(0), done: false };
-      }
-      
-      // Only try to read if we can get a reader
       const readLoop = this.transport.rawRead();
       return await readLoop.next();
     } catch (error) {
@@ -208,7 +200,7 @@ export class DeviceService {
 
   async readAndDecodeFromDevice(): Promise<{ text: string, done: boolean }> {
     const { value, done } = await this.readFromDevice();
-    
+    console.log('[readAndDecodeFromDevice] ', value);
     if (done || !value) {
       return { text: '', done: true };
     }
