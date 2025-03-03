@@ -137,21 +137,20 @@ export const dialogStyles = `
     opacity: 1;
   }
 
-  .firmware-selector-container {
-    margin: 1rem 0;
+  .firmware-dropdown-container {
+    margin-top: 0.5rem;
+    width: 100%;
     animation: fadeIn 0.5s ease-out forwards;
-    animation-delay: 0.2s;
-    opacity: 0;
   }
   
   .firmware-selector {
     width: 100%;
     padding: 0.5rem;
-    border-radius: 8px;
+    border-radius: 6px;
     border: 1px solid var(--ui-gray-light);
     background-color: var(--ui-white);
     color: var(--ui-navy);
-    font-size: 1rem;
+    font-size: 0.9rem;
     transition: border-color 0.2s, box-shadow 0.2s;
   }
   
@@ -163,6 +162,11 @@ export const dialogStyles = `
   
   .firmware-selector:hover {
     border-color: var(--ui-navy-light);
+  }
+  
+  /* Add extra padding to the welcome card with dropdown */
+  [data-action="flash"] .card-content {
+    padding-bottom: 0.5rem;
   }
   
   .welcome-title {
