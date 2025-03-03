@@ -137,6 +137,34 @@ export const dialogStyles = `
     opacity: 1;
   }
 
+  .firmware-selector-container {
+    margin: 1rem 0;
+    animation: fadeIn 0.5s ease-out forwards;
+    animation-delay: 0.2s;
+    opacity: 0;
+  }
+  
+  .firmware-selector {
+    width: 100%;
+    padding: 0.5rem;
+    border-radius: 8px;
+    border: 1px solid var(--ui-gray-light);
+    background-color: var(--ui-white);
+    color: var(--ui-navy);
+    font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  
+  .firmware-selector:focus {
+    outline: none;
+    border-color: var(--ui-navy-light);
+    box-shadow: 0 0 0 2px rgba(10, 25, 47, 0.1);
+  }
+  
+  .firmware-selector:hover {
+    border-color: var(--ui-navy-light);
+  }
+  
   .welcome-title {
     font-size: 24px;
     margin: 0 0 1.5rem 0;

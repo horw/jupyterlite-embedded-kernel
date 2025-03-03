@@ -100,7 +100,8 @@ export default class WelcomePanel extends Widget {
       onConnect: () => this.handleConnect(),
       onFlash: () => this.flashService.flashDevice(),
       onReset: () => this.deviceService.reset(),
-      deviceService: this.deviceService
+      deviceService: this.deviceService,
+      firmwareService: this.firmwareService
     });
 
     this.overlay.appendChild(this.dialog.getElement());
