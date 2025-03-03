@@ -39,6 +39,15 @@ export class FirmwareService {
 
   private constructor() {
     this.deviceService = DeviceService.getInstance();
+    
+    // Load saved selection from localStorage
+    const savedSelection = localStorage.getItem('selectedFirmwareId');
+    if (savedSelection) {
+      this.selectedFirmwareId = savedSelection;
+    } else {
+      // Default to Auto if no saved selection
+      this.selectedFirmwareId = 'Auto';
+    }
   }
 
   static getInstance(): FirmwareService {
@@ -153,5 +162,18 @@ export class FirmwareService {
 
   getFirmwareBlob(): Blob | null {
     return this.firmwareBlob;
+  }
+  
+  /**
+   * Reset firmware selection to Auto mode after successful flashing
+   * This way, next time the user flashes, it will auto-detect again
+   */
+  resetToAutoMode(): void {
+    // Only reset to Auto if we're not already in Auto mode
+    if (this.selectedFirmwareId !== 'Auto') {
+      console.log('Resetting firmware selection to Auto mode for next flash');
+      this.selectedFirmwareId = 'Auto';
+      localStorage.setItem('selectedFirmwareId', 'Auto');
+    }
   }
 }

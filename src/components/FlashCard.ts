@@ -26,6 +26,33 @@ export class FlashCard extends Card {
     if (this.dropdown) {
       this.handleDropdownClickEvents();
     }
+    
+    // Setup event listeners to update UI when device is connected or flash is complete
+    this.setupEventListeners();
+  }
+  
+  private setupEventListeners(): void {
+    // Listen for device connection events
+    document.addEventListener('deviceConnected', () => {
+      console.log('FlashCard received deviceConnected event');
+      this.updateDeviceInfo();
+      
+      // Also update the dropdown to reflect any changes
+      if (this.dropdown) {
+        this.dropdown.value = this.firmwareService.getSelectedFirmwareId();
+      }
+    });
+    
+    // Listen for flash complete events
+    document.addEventListener('flashComplete', () => {
+      console.log('FlashCard received flashComplete event');
+      this.updateDeviceInfo();
+      
+      // Also update the dropdown to reflect any changes
+      if (this.dropdown) {
+        this.dropdown.value = this.firmwareService.getSelectedFirmwareId();
+      }
+    });
   }
 
   private createFirmwareDropdown(): void {
@@ -47,20 +74,32 @@ export class FlashCard extends Card {
         console.log('Dropdown already exists, skipping creation');
         return;
       }
-    
-      // Create a container for the dropdown
-      const dropdownContainer = document.createElement('div');
-      dropdownContainer.className = 'firmware-dropdown-container';
       
-      // Create a device info element to show detected device
+      // Create a container for the entire firmware selection section
+      const firmwareSection = document.createElement('div');
+      firmwareSection.className = 'firmware-section';
+      
+      // Create a device info element to show detected device - display this first
       this.deviceInfoElement = document.createElement('div');
       this.deviceInfoElement.className = 'device-info';
       this.updateDeviceInfo();
       
-      // Create a label for the dropdown
+      // Add the device info element right at the top
+      firmwareSection.appendChild(this.deviceInfoElement);
+      
+      // Add a divider after device info
+      const topDivider = document.createElement('div');
+      topDivider.className = 'firmware-divider';
+      firmwareSection.appendChild(topDivider);
+      
+      // Create a container for the dropdown
+      const dropdownContainer = document.createElement('div');
+      dropdownContainer.className = 'firmware-dropdown-container';
+      
+      // Create a label for the dropdown with a tooltip
       const label = document.createElement('label');
       label.className = 'firmware-dropdown-label';
-      label.textContent = 'Select Firmware:';
+      label.textContent = 'Firmware:';
       
       // Create the dropdown element
       this.dropdown = document.createElement('select');
@@ -75,20 +114,13 @@ export class FlashCard extends Card {
         this.dropdown.appendChild(optionElement);
       });
     
-      // Try to select the appropriate firmware based on detected device
+      // Always start with Auto selected when a device is connected
       const deviceType = this.deviceService.getDeviceType();
       if (deviceType) {
-        // Auto-select firmware based on device type
-        if (deviceType.includes('C6')) {
-          this.dropdown.value = 'esp32-c6';
-          this.firmwareService.setSelectedFirmwareId('esp32-c6');
-        } else if (deviceType.includes('C3')) {
-          this.dropdown.value = 'esp32-c3';
-          this.firmwareService.setSelectedFirmwareId('esp32-c3');
-        } else if (deviceType.includes('ESP32')) {
-          this.dropdown.value = 'esp32';
-          this.firmwareService.setSelectedFirmwareId('esp32');
-        }
+        // When device is detected, show Auto as selected but internally track the correct firmware
+        this.dropdown.value = 'Auto';
+        this.firmwareService.setSelectedFirmwareId('Auto');
+        // The firmware service will handle selecting the right firmware during flashing
       } else {
         // If no device detected, use the stored preference
         this.dropdown.value = this.firmwareService.getSelectedFirmwareId();
@@ -105,21 +137,8 @@ export class FlashCard extends Card {
       dropdownContainer.appendChild(label);
       dropdownContainer.appendChild(this.dropdown);
       
-      // Create a container for the entire firmware selection section
-      const firmwareSection = document.createElement('div');
-      firmwareSection.className = 'firmware-section';
-      
-      // Add a divider
-      const divider = document.createElement('div');
-      divider.className = 'firmware-divider';
-      
-      // Append the divider, device info, and dropdown container to the firmware section
-      firmwareSection.appendChild(divider);
-      if (this.deviceInfoElement) {
-        firmwareSection.appendChild(this.deviceInfoElement);
-      }
       firmwareSection.appendChild(dropdownContainer);
-      
+
       // Append the firmware section to the card content
       this.cardContent.appendChild(firmwareSection);
       console.log('Dropdown added to card');
@@ -143,33 +162,61 @@ export class FlashCard extends Card {
     const deviceType = this.deviceService.getDeviceType();
     const selectedFirmware = this.firmwareService.getSelectedFirmwareId();
     
+    this.deviceInfoElement.innerHTML = ``; // Clear previous content
+    
     if (deviceType) {
-      // Device is detected
+      // Device has been detected after flashing - show which device was detected
       this.deviceInfoElement.innerHTML = `
         <div class="device-detected">
-          <span class="device-icon">🔍</span>
-          <span>Detected: <strong>${deviceType}</strong></span>
+          <div class="device-detected-header">
+            <span class="device-icon success">✓</span>
+            <span class="device-status">Last connected device</span>
+          </div>
+          <div class="device-details">
+            <strong>Type:</strong> ${deviceType}
+            <span class="firmware-badge">Recommended: ${this.getRecommendedFirmwareForDevice(deviceType)}</span>
+          </div>
         </div>
       `;
     } else if (selectedFirmware === 'Auto') {
-      // Auto detection is selected but no device detected yet
+      // Auto detection is selected - explain what will happen
       this.deviceInfoElement.innerHTML = `
         <div class="device-auto-mode">
-          <span class="device-icon">⏳</span>
-          <span>Connect device for auto-detection</span>
+          <div class="device-auto-header">
+            <span class="device-icon waiting">🔍</span>
+            <span class="device-status waiting">Auto-detection mode</span>
+          </div>
+          <div class="device-action-hint">
+            When you click <strong>Flash</strong>, the appropriate firmware will be automatically selected based on your device type.
+          </div>
         </div>
       `;
     } else {
-      // No device detected and a specific firmware is selected
+      // A specific firmware is manually selected
       this.deviceInfoElement.innerHTML = `
         <div class="device-not-detected">
-          <span class="device-icon">ℹ️</span>
-          <span>No device detected yet</span>
+          <div class="device-auto-header">
+            <span class="device-icon">🔧</span>
+            <span class="device-status">Manual selection</span>
+          </div>
+          <div class="device-manual-mode">
+            Will flash with <strong>${selectedFirmware}</strong> firmware regardless of device type
+          </div>
         </div>
       `;
     }
     
     this.deviceInfoElement.style.display = 'block';
+  }
+  
+  private getRecommendedFirmwareForDevice(deviceType: string): string {
+    if (deviceType.includes('C6')) {
+      return 'ESP32-C6';
+    } else if (deviceType.includes('C3')) {
+      return 'ESP32-C3';
+    } else {
+      return 'ESP32';
+    }
   }
 
   // Completely override the update method for FlashCard

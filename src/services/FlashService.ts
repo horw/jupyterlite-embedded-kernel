@@ -59,16 +59,42 @@ export class FlashService {
         const match = deviceInfo.match(/ESP32[-\w]*/i);
         if (match) {
           const chipType = match[0].toUpperCase();
+          console.log(`🔍 Auto-detected device: ${chipType}`);
+          
+          // Store the detected chip type
           this.deviceService.setDeviceType(chipType);
           
-          // Set firmware to match the detected chip
-          if (chipType.includes('C6')) {
-            this.firmwareService.setSelectedFirmwareId('esp32-c6');
-          } else if (chipType.includes('C3')) {
-            this.firmwareService.setSelectedFirmwareId('esp32-c3');
+          // Dispatch event that device was connected and detected
+          const deviceConnectedEvent = new CustomEvent('deviceConnected', {
+            detail: { deviceType: chipType }
+          });
+          document.dispatchEvent(deviceConnectedEvent);
+          
+          // Check current firmware selection
+          const currentSelection = this.firmwareService.getSelectedFirmwareId();
+          
+          // When using Auto mode, we determine which firmware to use based on the detected device
+          if (currentSelection === 'Auto') {
+
+            let targetFirmware = 'esp32';
+            
+            if (chipType.includes('C6')) {
+              targetFirmware = 'esp32-c6';
+            } else if (chipType.includes('C3')) {
+              targetFirmware = 'esp32-c3';
+            }
+            
+            // Set the chosen firmware in FirmwareService for downloading
+            this.firmwareService.setSelectedFirmwareId(targetFirmware);
+            
+            console.log(`✓ Auto-detection: Using ${targetFirmware} firmware for ${chipType}`);
+            progressOverlay.setStatus(`Auto-detected ${chipType}. Using ${targetFirmware} firmware...`);
           } else {
-            this.firmwareService.setSelectedFirmwareId('esp32');
+            console.log(`⚠️ Manual firmware selection: Using ${currentSelection} firmware (device: ${chipType})`);
+            progressOverlay.setStatus(`Using manually selected ${currentSelection} firmware...`);
           }
+        } else {
+          console.warn(`⚠️ Could not determine chip type from device info. Using default firmware.`);
         }
       }
 
@@ -94,6 +120,16 @@ export class FlashService {
 
       await esploader.writeFlash(flashOptions);
       progressOverlay.setStatus('Flash complete!');
+      
+      // Reset to Auto mode for next flash
+      this.firmwareService.resetToAutoMode();
+      
+      // Dispatch event that flash is complete
+      const flashCompleteEvent = new CustomEvent('flashComplete', {
+        detail: { success: true }
+      });
+      document.dispatchEvent(flashCompleteEvent);
+      
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // After flashing is complete, clean things up

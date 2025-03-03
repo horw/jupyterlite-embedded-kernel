@@ -152,33 +152,70 @@ export const dialogStyles = `
   
   .device-info {
     margin: 0.5rem 0;
-    font-size: 0.85rem;
+    font-size: 0.95rem;
     color: var(--ui-gray-darker);
   }
   
   .device-detected, .device-not-detected, .device-auto-mode {
     display: flex;
-    align-items: center;
-    padding: 0.5rem;
-    border-radius: 4px;
-    background-color: rgba(0, 0, 0, 0.03);
+    flex-direction: column;
+    padding: 0.8rem;
+    border-radius: 6px;
     margin-bottom: 0.5rem;
+    transition: all 0.3s ease;
   }
   
   .device-detected {
-    color: var(--ui-navy);
-    border-left: 3px solid var(--ui-green);
+    background-color: rgba(40, 167, 69, 0.08);
+    border-left: 4px solid var(--ui-green);
+  }
+  
+  .device-detected-header, .device-auto-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+  
+  .device-status {
+    font-size: 1rem;
+  }
+  
+  .device-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding-left: 1.8rem;
+  }
+  
+  .firmware-badge {
+    display: inline-block;
+    background-color: rgba(40, 167, 69, 0.15);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    margin-top: 0.3rem;
+    font-weight: 500;
   }
   
   .device-not-detected {
-    color: var(--ui-gray-darker);
-    border-left: 3px solid var(--ui-gray);
+    background-color: rgba(255, 193, 7, 0.08);
+    border-left: 4px solid var(--ui-orange);
+  }
+  
+  .device-manual-mode {
+    padding-left: 1.8rem;
   }
   
   .device-auto-mode {
-    color: var(--ui-navy);
-    border-left: 3px solid var(--ui-blue);
+    background-color: rgba(13, 110, 253, 0.08);
+    border-left: 4px solid var(--ui-blue);
     animation: pulse 2s infinite;
+  }
+  
+  .device-action-hint {
+    padding-left: 1.8rem;
+    font-size: 0.95rem;
   }
   
   @keyframes pulse {
@@ -194,43 +231,89 @@ export const dialogStyles = `
   }
   
   .device-icon {
-    margin-right: 0.5rem;
-    font-size: 1rem;
+    margin-right: 0.7rem;
+    font-size: 1.2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .device-icon.success {
+    color: var(--ui-green);
+  }
+  
+  .device-icon.warning {
+    color: var(--ui-orange);
+  }
+  
+  .device-icon.waiting {
+    color: var(--ui-blue);
+  }
+  
+  .device-status.waiting {
+    color: var(--ui-blue);
+    font-weight: 500;
   }
   
   .firmware-dropdown-container {
-    margin-top: 0.5rem;
+    margin: 0.8rem 0;
     width: 100%;
     display: flex;
-    flex-direction: column;
+    align-items: center;
   }
   
   .firmware-dropdown-label {
-    font-size: 0.85rem;
+    display: inline-block;
+    margin-right: 0.8rem;
+    font-size: 0.95rem;
     font-weight: 500;
+    min-width: 6rem;
     color: var(--ui-navy);
-    margin-bottom: 0.3rem;
   }
   
   .firmware-selector {
-    width: 100%;
-    padding: 0.5rem;
+    flex: 1;
+    padding: 0.6rem 0.8rem;
     border-radius: 6px;
     border: 1px solid var(--ui-gray-light);
     background-color: var(--ui-white);
     color: var(--ui-navy);
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     transition: border-color 0.2s, box-shadow 0.2s;
   }
   
   .firmware-selector:focus {
     outline: none;
-    border-color: var(--ui-navy-light);
-    box-shadow: 0 0 0 2px rgba(10, 25, 47, 0.1);
+    border-color: var(--ui-blue);
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
   }
   
   .firmware-selector:hover {
-    border-color: var(--ui-navy-light);
+    border-color: var(--ui-blue);
+  }
+  
+  /* Add styles for the tooltip */
+  .tooltip-container {
+    margin-top: 0.8rem;
+    font-size: 0.85rem;
+    color: var(--ui-gray-darker);
+    display: flex;
+    align-items: flex-start;
+    padding: 0.8rem;
+    background-color: rgba(13, 110, 253, 0.05);
+    border-radius: 6px;
+    border-left: 3px solid var(--ui-blue);
+  }
+  
+  .tooltip-icon {
+    margin-right: 0.5rem;
+    color: var(--ui-blue);
+    font-size: 1rem;
+  }
+  
+  .tooltip-text {
+    flex: 1;
+    line-height: 1.5;
   }
   
   /* Add extra padding to the flash card */
