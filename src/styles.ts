@@ -137,10 +137,31 @@ export const dialogStyles = `
     opacity: 1;
   }
 
+  .firmware-section {
+    width: 100%;
+    margin-top: 0.75rem;
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+  
+  .firmware-divider {
+    height: 1px;
+    width: 100%;
+    background-color: var(--ui-gray-light);
+    margin: 0.5rem 0;
+  }
+  
   .firmware-dropdown-container {
     margin-top: 0.5rem;
     width: 100%;
-    animation: fadeIn 0.5s ease-out forwards;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .firmware-dropdown-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--ui-navy);
+    margin-bottom: 0.3rem;
   }
   
   .firmware-selector {
@@ -164,9 +185,18 @@ export const dialogStyles = `
     border-color: var(--ui-navy-light);
   }
   
-  /* Add extra padding to the welcome card with dropdown */
+  /* Add extra padding to the flash card */
   [data-action="flash"] .card-content {
     padding-bottom: 0.5rem;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  /* Flash card header section that contains icon, title and description */
+  [data-action="flash"] .card-header {
+    display: flex;
+    align-items: center;
+    width: 100%;
   }
   
   .welcome-title {
