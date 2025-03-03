@@ -7,7 +7,7 @@ export interface CardProps {
 }
 
 export class Card {
-  private element: HTMLElement;
+  protected element: HTMLElement;
 
   constructor(props: CardProps, onClick: () => void) {
     this.element = document.createElement('div');

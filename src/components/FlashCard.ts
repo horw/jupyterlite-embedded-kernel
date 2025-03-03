@@ -30,11 +30,8 @@ export class FlashCard extends Card {
     }
 
     try {
-      // Get the element created by the parent Card class
-      const element = this.getElement();
-    
       // Find the card content
-      this.cardContent = element.querySelector('.card-content') as HTMLDivElement;
+      this.cardContent = this.element.querySelector('.card-content') as HTMLDivElement;
       if (!this.cardContent) {
         console.error('Card content element not found');
         return;
@@ -110,46 +107,25 @@ export class FlashCard extends Card {
     }
   }
 
-  // Override update method to preserve the dropdown
+  // Completely override the update method for FlashCard
   update(props: CardProps): void {
-    // Store the current firmware section before the card gets updated
-    const firmwareSection = this.cardContent?.querySelector('.firmware-section');
+
+    // Set the entire element HTML to our custom format
+    this.element.innerHTML = `
+      <div class="card-content">
+        <div class="card-header">
+          <span class="welcome-icon">${props.icon}</span>
+          <div>
+            <h3 class="card-title">${props.title}</h3>
+            <p class="card-description">${props.description}</p>
+          </div>
+        </div>
+      </div>
+    `;
     
-    // Call parent update to update the card content
-    super.update(props);
-    
-    // Get the newly updated card content element
-    const element = this.getElement();
-    this.cardContent = element.querySelector('.card-content') as HTMLDivElement;
-    
-    if (this.cardContent) {
-      // Wrap the existing content in a header div
-      const contentChildren = Array.from(this.cardContent.children);
-      
-      // Create header container
-      const headerContainer = document.createElement('div');
-      headerContainer.className = 'card-header';
-      
-      // Move all existing content into the header container
-      contentChildren.forEach(child => {
-        // Skip if it's already our firmware section
-        if (child.className !== 'firmware-section') {
-          headerContainer.appendChild(child);
-        }
-      });
-      
-      // Replace content with new structure
-      this.cardContent.innerHTML = '';
-      this.cardContent.appendChild(headerContainer);
-      
-      // Re-add firmware section if it existed
-      if (firmwareSection) {
-        this.cardContent.appendChild(firmwareSection);
-        console.log('Firmware section re-added after update');
-      } else {
-        // If there was no firmware section, initialize it
-        setTimeout(() => this.initializeFlashCard(), 0);
-      }
-    }
+    // Get the card content element reference
+    this.cardContent = this.element.querySelector('.card-content') as HTMLDivElement;
+
+    setTimeout(() => this.initializeFlashCard(), 0);
   }
 }

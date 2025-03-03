@@ -13,14 +13,14 @@ export class FirmwareService {
   // Available firmware options
   private firmwareOptions: FirmwareOption[] = [
     {
-      id: 'esp32-c3',
-      name: 'ESP32 C3',
-      url: 'https://horw.github.io/buffer/ESP32_GENERIC_C3-20241129-v1.24.1.bin'
-    },
-    {
       id: 'esp32',
       name: 'ESP32',
       url: 'https://horw.github.io/buffer/ESP32_GENERIC-20241129-v1.24.1.bin'
+    },
+    {
+      id: 'esp32-c3',
+      name: 'ESP32 C3',
+      url: 'https://horw.github.io/buffer/ESP32_GENERIC_C3-20241129-v1.24.1.bin'
     },
     {
       id: 'esp32-c6',
