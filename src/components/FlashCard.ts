@@ -173,8 +173,7 @@ export class FlashCard extends Card {
             <span class="device-status">Last connected device</span>
           </div>
           <div class="device-details">
-            <strong>Type:</strong> ${deviceType}
-            <span class="firmware-badge">Recommended: ${this.getRecommendedFirmwareForDevice(deviceType)}</span>
+            <span class="firmware-badge">${this.getRecommendedFirmwareForDevice(deviceType)}</span>
           </div>
         </div>
       `;
