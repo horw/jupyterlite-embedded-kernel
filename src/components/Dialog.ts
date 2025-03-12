@@ -2,6 +2,7 @@ import { Card, CardProps } from './Card';
 import { DeviceService } from '../services/DeviceService';
 import { FirmwareService } from '../services/FirmwareService';
 import { FlashCard } from './FlashCard';
+import { ConnectCard } from './ConnectCard';
 
 export interface DialogProps {
   onClose: () => void;
@@ -14,7 +15,7 @@ export interface DialogProps {
 
 export class Dialog {
   private element: HTMLDivElement;
-  private connectCard: Card;
+  private connectCard: ConnectCard;
   private deviceService: DeviceService;
 
   constructor(props: DialogProps) {
@@ -27,7 +28,7 @@ export class Dialog {
     const optionsContainer = this.createOptionsContainer();
 
     // Create cards
-    this.connectCard = new Card(this.getConnectCardProps(), props.onConnect);
+    this.connectCard = new ConnectCard(this.getConnectCardProps(), props.onConnect);
     const flashCard = new FlashCard({
       action: 'flash',
       icon: '⚡️',

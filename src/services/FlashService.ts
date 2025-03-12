@@ -272,6 +272,15 @@ export class FlashService {
       await this.deviceService.reset();
 
       console.warn('Device reset...');
+      
+      // After reconnection, dispatch a device connected event to update UI
+      const deviceType = this.deviceService.getDeviceType();
+      if (deviceType) {
+        const deviceConnectedEvent = new CustomEvent('deviceConnected', {
+          detail: { deviceType }
+        });
+        document.dispatchEvent(deviceConnectedEvent);
+      }
     } catch (err) {
       const errorMessage = ErrorHandler.getErrorMessage(err);
       progressOverlay.setStatus(`Flash failed: ${errorMessage}`);
