@@ -4,7 +4,6 @@ import { globalStyles, animations, overlayStyles, dialogStyles, minimizedStyles,
 import { FirmwareService } from './services/FirmwareService';
 import { DeviceService } from './services/DeviceService';
 import { FlashService } from './services/FlashService';
-import { UIService } from './services/UIService';
 import { MinimizedButton } from './components/MinimizedButton';
 import { Dialog } from './components/Dialog';
 
@@ -12,7 +11,6 @@ export default class WelcomePanel extends Widget {
   private firmwareService: FirmwareService = FirmwareService.getInstance();
   private deviceService: DeviceService = DeviceService.getInstance();
   private flashService: FlashService = FlashService.getInstance();
-  private uiService: UIService = UIService.getInstance();
   private minimizedButton: MinimizedButton;
   private dialog!: Dialog;
 
@@ -24,7 +22,8 @@ export default class WelcomePanel extends Widget {
     this.minimizedButton = new MinimizedButton(() => this.show());
     document.body.appendChild(this.minimizedButton.getElement());
 
-    this.uiService.initializeStyles([
+    let styleElement = document.createElement('style');
+    styleElement.textContent = [
       globalStyles,
       animations,
       overlayStyles,
@@ -33,12 +32,9 @@ export default class WelcomePanel extends Widget {
       cardStyles,
       buttonStyles,
       progressOverlayStyles
-    ]);
+    ].join('\n');
+    document.head.appendChild(styleElement);
 
-    document.addEventListener("writeHelloWorld", (e: Event) => {
-        const customEvent = e as CustomEvent<{ title: string }>;
-        console.log(customEvent.detail.title);
-    });
   }
 
   async initUI(kernel: EmbeddedKernel): Promise<void> {

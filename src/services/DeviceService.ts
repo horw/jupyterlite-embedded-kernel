@@ -57,7 +57,7 @@ export class DeviceService {
       throw err;
     }
     
-    const event = new CustomEvent("writeHelloWorld", {
+    const event = new CustomEvent("device connected", {
         detail: { title: "new device connected" }
     });
     document.dispatchEvent(event)
@@ -135,22 +135,6 @@ export class DeviceService {
     this.isDeviceConnected = false;
   }
 
-  async writeToDevice(data: Uint8Array): Promise<boolean> {
-    if (!this.transport || !this.transport.device.writable) {
-      return false;
-    }
-
-    try {
-      const writer = this.transport.device.writable.getWriter();
-      await writer.write(data);
-      writer.releaseLock();
-      return true;
-    } catch (error) {
-      console.error('Error writing to device:', error);
-      return false;
-    }
-  }
-
   async sendCommand(code: string): Promise<boolean> {
     if (!this.transport || !this.transport.device.writable) {
       return false;
@@ -217,8 +201,6 @@ export class DeviceService {
     } catch (error) {
       console.error('Error reading from device:', error);
       
-      // Don't try to force reconnection here - it might cause more issues
-      // Just let the caller handle the error
       return { value: undefined, done: true };
     }
   }

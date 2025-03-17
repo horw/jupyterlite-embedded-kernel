@@ -374,8 +374,8 @@ export const minimizedStyles = `
   }
 
   .minimized-button {
-    width: 96px;
-    height: 96px;
+    width: 120px;
+    height: 120px;
     border-radius: 50%;
     background: white;
     border: none;
@@ -388,11 +388,52 @@ export const minimizedStyles = `
     padding: 12px;
     overflow: hidden;
   }
-
-  .minimized-button img {
+  
+  .button-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     width: 100%;
     height: 100%;
+    gap: 8px;
+  }
+
+  .minimized-button img {
+    width: 60px;
+    height: 60px;
     object-fit: contain;
+  }
+  
+  .status-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    margin-top: 4px;
+  }
+
+  .status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #e74c3c;
+    display: inline-block;
+  }
+
+  .status-indicator.connected {
+    background-color: #2ecc71;
+  }
+
+  .device-label {
+    font-size: 11px;
+    color: #555;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: bold;
+    line-height: 1.2;
   }
 
   .minimized-button:hover {
