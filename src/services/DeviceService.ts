@@ -56,6 +56,11 @@ export class DeviceService {
       console.error('Failed to connect:', err);
       throw err;
     }
+    
+    const event = new CustomEvent("writeHelloWorld", {
+        detail: { title: "new device connected" }
+    });
+    document.dispatchEvent(event)
   }
 
   async disconnect(): Promise<void> {

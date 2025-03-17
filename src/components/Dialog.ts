@@ -5,7 +5,7 @@ import { FlashCard } from './FlashCard';
 import { ConnectCard } from './ConnectCard';
 
 export interface DialogProps {
-  onClose: () => void;
+  onCloseDialog: () => void;
   onConnect: () => void;
   onFlash: () => void;
   onReset: () => void;
@@ -18,12 +18,17 @@ export class Dialog {
   private connectCard: ConnectCard;
   private deviceService: DeviceService;
 
-  constructor(props: DialogProps) {
+  constructor(props: DialogProps, onBackdropClick: () => void) {
     this.deviceService = props.deviceService;
     this.element = document.createElement('div');
-    this.element.className = 'welcome-dialog';
+    this.element.className = 'welcome-overlay';
+    this.element.addEventListener('click', (e) => {
+      if (e.target === this.element) {
+        onBackdropClick();
+      }
+    });
 
-    const closeButton = this.createCloseButton(props.onClose);
+    const closeButton = this.createCloseButton(props.onCloseDialog);
     const header = this.createHeader();
     const optionsContainer = this.createOptionsContainer();
 
@@ -49,16 +54,21 @@ export class Dialog {
     optionsContainer.appendChild(flashCard.getElement());
     optionsContainer.appendChild(resetCard.getElement());
 
-    this.element.appendChild(closeButton);
-    this.element.appendChild(header);
-    this.element.appendChild(optionsContainer);
+    let content = document.createElement('div');
+    content.className = 'welcome-dialog';
+
+    content.appendChild(closeButton);
+    content.appendChild(header);
+    content.appendChild(optionsContainer);
+
+    this.element.appendChild(content);
   }
 
-  private createCloseButton(onClose: () => void): HTMLButtonElement {
+  private createCloseButton(onCloseDialog: () => void): HTMLButtonElement {
     const closeButton = document.createElement('button');
     closeButton.className = 'close-button';
     closeButton.innerHTML = '×';
-    closeButton.addEventListener('click', onClose);
+    closeButton.addEventListener('click', onCloseDialog);
     return closeButton;
   }
 

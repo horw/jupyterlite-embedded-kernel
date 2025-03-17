@@ -1,22 +1,24 @@
 export class MinimizedButton {
-  private element: HTMLButtonElement;
+  private element: HTMLElement;
   private deviceLabel: HTMLSpanElement;
 
   constructor(onShow: () => void) {
-    this.element = document.createElement('button');
-    this.element.className = 'minimized-button';
-    
-    // Create and add the logo image
+    this.element = document.createElement('div');
+    this.element.className = 'esp-button-container';
+
+    let minimized_button = document.createElement('button');
+    minimized_button.className = 'minimized-button';
+
     const img = document.createElement('img');
     img.src = 'https://www.cdnlogo.com/logos/e/41/espressif-systems.svg';
     img.alt = 'Espressif Systems Logo';
-    this.element.appendChild(img);
+    minimized_button.appendChild(img);
     
     // Create a label to show which device is connected
     this.deviceLabel = document.createElement('span');
     this.deviceLabel.className = 'device-label';
     this.deviceLabel.textContent = 'ESP32';
-    this.element.appendChild(this.deviceLabel);
+    minimized_button.appendChild(this.deviceLabel);
     
     // Listen for device connection events
     document.addEventListener('deviceConnected', (event: Event) => {
@@ -29,6 +31,8 @@ export class MinimizedButton {
     this.element.title = 'Open ESP32 Device Manager';
     this.element.style.display = 'none';
     this.element.addEventListener('click', onShow);
+
+    this.element.appendChild(minimized_button);
   }
 
   show(): void {
@@ -39,7 +43,7 @@ export class MinimizedButton {
     this.element.style.display = 'none';
   }
 
-  getElement(): HTMLButtonElement {
+  getElement(): HTMLElement {
     return this.element;
   }
   
