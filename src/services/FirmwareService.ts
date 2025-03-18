@@ -1,10 +1,5 @@
 import { DeviceService } from './DeviceService';
-
-export interface FirmwareOption {
-  id: string;
-  name: string;
-  url: string;
-}
+import { firmwareOptions, FirmwareOption } from '../constants'
 
 export class FirmwareService {
   private static instance: FirmwareService;
@@ -13,40 +8,14 @@ export class FirmwareService {
   private firmwareBlob: Blob | null = null;
   private selectedFirmwareId: string = 'Auto';
   
-  // Available firmware options
-  private firmwareOptions: FirmwareOption[] = [
-    {
-      id: 'Auto',
-      name: "Auto detection",
-      url: ''
-    },
-    {
-      id: 'esp32',
-      name: 'ESP32',
-      url: 'https://horw.github.io/buffer/ESP32_GENERIC-20241129-v1.24.1.bin'
-    },
-    {
-      id: 'esp32-c3',
-      name: 'ESP32 C3',
-      url: 'https://horw.github.io/buffer/ESP32_GENERIC_C3-20241129-v1.24.1.bin'
-    },
-    {
-      id: 'esp32-c6',
-      name: 'ESP32 C6',
-      url: 'https://horw.github.io/buffer/ESP32_GENERIC_C6-20241129-v1.24.1.bin'
-    }
-  ];
-
   private constructor() {
     this.deviceService = DeviceService.getInstance();
     
-    // Load saved selection from localStorage
     const savedSelection = localStorage.getItem('selectedFirmwareId');
     if (savedSelection) {
       this.selectedFirmwareId = savedSelection;
     } else {
-      // Default to Auto if no saved selection
-      this.selectedFirmwareId = 'Auto';
+      this.selectedFirmwareId = 'auto';
     }
   }
 
@@ -57,17 +26,8 @@ export class FirmwareService {
     return FirmwareService.instance;
   }
 
-  async loadCachedFirmware(): Promise<string | null> {
-    const cachedFirmware = localStorage.getItem('cachedFirmware');
-    if (cachedFirmware) {
-      this.firmwareString = cachedFirmware;
-      console.log('Loaded firmware from localStorage');
-    }
-    return this.firmwareString;
-  }
-
-  getFirmwareOptions(): FirmwareOption[] {
-    return this.firmwareOptions;
+  getFirmwareOptions(){
+    return firmwareOptions;
   }
 
   getSelectedFirmwareId(): string {
@@ -75,9 +35,8 @@ export class FirmwareService {
   }
 
   setSelectedFirmwareId(id: string): void {
-    if (this.firmwareOptions.some(option => option.id === id)) {
+    if (firmwareOptions.some(option => option.id === id)) {
       this.selectedFirmwareId = id;
-      // Clear cached firmware when changing selection
       this.firmwareString = null;
       this.firmwareBlob = null;
       localStorage.removeItem('cachedFirmware');
@@ -86,14 +45,12 @@ export class FirmwareService {
   }
 
   async downloadFirmware(): Promise<string> {
-    // Load selected firmware ID from localStorage if available
     const savedFirmwareId = localStorage.getItem('selectedFirmwareId');
     if (savedFirmwareId) {
       this.selectedFirmwareId = savedFirmwareId;
     }
     
-    // Handle Auto detection mode
-    if (this.selectedFirmwareId === 'Auto') {
+    if (this.selectedFirmwareId === 'auto') {
       return this.downloadAutoDetectedFirmware();
     } else {
       return this.downloadSpecificFirmware(this.selectedFirmwareId);
@@ -101,7 +58,6 @@ export class FirmwareService {
   }
   
   private async downloadAutoDetectedFirmware(): Promise<string> {
-    // Get device type from DeviceService
     const deviceType = this.deviceService.getDeviceType();
     let firmwareId: string;
     
@@ -119,12 +75,11 @@ export class FirmwareService {
       firmwareId = 'esp32';
     }
     
-    // Download the detected firmware
     return this.downloadSpecificFirmware(firmwareId);
   }
   
   private async downloadSpecificFirmware(firmwareId: string): Promise<string> {
-    const selectedFirmware = this.firmwareOptions.find(option => option.id === firmwareId);
+    const selectedFirmware = firmwareOptions.find(option => option.id === firmwareId);
     if (!selectedFirmware || !selectedFirmware.url) {
       throw new Error(`Invalid firmware selection or no URL for: ${firmwareId}`);
     }
@@ -146,22 +101,7 @@ export class FirmwareService {
       .map(byte => String.fromCharCode(byte))
       .join('');
 
-    try {
-      localStorage.setItem('cachedFirmware', this.firmwareString);
-      console.log('Firmware cached in localStorage');
-    } catch (e) {
-      console.warn('Failed to cache firmware in localStorage:', e);
-    }
-
     return this.firmwareString;
   }
 
-  getFirmwareString(): string | null {
-    return this.firmwareString;
-  }
-
-  getFirmwareBlob(): Blob | null {
-    return this.firmwareBlob;
-  }
-  
 }

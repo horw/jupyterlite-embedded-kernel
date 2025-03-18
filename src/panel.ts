@@ -1,14 +1,12 @@
 import { Widget } from '@lumino/widgets';
 import { EmbeddedKernel } from './kernel';
 import { globalStyles, animations, overlayStyles, dialogStyles, minimizedStyles, cardStyles, buttonStyles, progressOverlayStyles } from './styles';
-import { FirmwareService } from './services/FirmwareService';
 import { DeviceService } from './services/DeviceService';
 import { FlashService } from './services/FlashService';
 import { MinimizedButton } from './components/MinimizedButton';
 import { Dialog } from './components/Dialog';
 
 export default class WelcomePanel extends Widget {
-  private firmwareService: FirmwareService = FirmwareService.getInstance();
   private deviceService: DeviceService = DeviceService.getInstance();
   private flashService: FlashService = FlashService.getInstance();
   private minimizedButton: MinimizedButton;
@@ -43,14 +41,10 @@ export default class WelcomePanel extends Widget {
 
     this.dialog = new Dialog(
       {
-        onCloseDialog: () => this.hide(),
-        onConnect: () => this.deviceService.connect(),
-        onFlash: () => this.flashService.flashDevice(),
-        onReset: () => this.deviceService.reset(),
+        closeDialog: () => this.hide(),
         deviceService: this.deviceService,
-        firmwareService: this.firmwareService
+        flashService: this.flashService,
       },
-      ()=> this.hide()
     );
     this.node.appendChild(this.dialog.getElement());
 

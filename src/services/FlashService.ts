@@ -84,6 +84,7 @@ export class FlashService {
       // Extract device type from the device info string
       if (deviceInfo) {
         // Extract the chip type (e.g., ESP32-C6, ESP32-C3, ESP32)
+        console.log(deviceInfo)
         const match = deviceInfo.match(/ESP32[-\w]*/i);
         if (match) {
           const chipType = match[0].toUpperCase();

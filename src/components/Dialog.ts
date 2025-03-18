@@ -1,16 +1,13 @@
 import { Card, CardProps } from './Card';
 import { DeviceService } from '../services/DeviceService';
-import { FirmwareService } from '../services/FirmwareService';
+import { FlashService } from '../services/FlashService';
 import { FlashCard } from './FlashCard';
 import { ConnectCard } from './ConnectCard';
 
 export interface DialogProps {
-  onCloseDialog: () => void;
-  onConnect: () => void;
-  onFlash: () => void;
-  onReset: () => void;
+  closeDialog: () => void;
   deviceService: DeviceService;
-  firmwareService?: FirmwareService;
+  flashService: FlashService;
 }
 
 export class Dialog {
@@ -18,28 +15,28 @@ export class Dialog {
   private connectCard: ConnectCard;
   private deviceService: DeviceService;
 
-  constructor(props: DialogProps, onBackdropClick: () => void) {
+  constructor(props: DialogProps) {
     this.deviceService = props.deviceService;
     this.element = document.createElement('div');
     this.element.className = 'welcome-overlay';
     this.element.addEventListener('click', (e) => {
       if (e.target === this.element) {
-        onBackdropClick();
+        props.closeDialog
       }
     });
 
-    const closeButton = this.createCloseButton(props.onCloseDialog);
+    const closeButton = this.createCloseButton(props.closeDialog);
     const header = this.createHeader();
     const optionsContainer = this.createOptionsContainer();
 
-    this.connectCard = new ConnectCard(this.getConnectCardProps(), props.onConnect);
+    this.connectCard = new ConnectCard(this.getConnectCardProps(), () => props.deviceService.connect());
     const flashCard = new FlashCard({
       action: 'flash',
       icon: '⚡️',
       title: 'Flash Device',
       description: 'Flash your device with the latest firmware',
       color: 'var(--ui-red)'
-    }, props.onFlash);
+    }, () => props.flashService.flashDevice());
 
     const resetCard = new Card({
       action: 'reset-esp',
@@ -47,7 +44,7 @@ export class Dialog {
       title: 'Hard reset Esp',
       description: 'Hard reset esp chip',
       color: 'var(--ui-red)'
-    }, props.onReset);
+    }, () => props.deviceService.reset());
 
     optionsContainer.appendChild(this.connectCard.getElement());
     optionsContainer.appendChild(flashCard.getElement());

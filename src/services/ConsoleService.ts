@@ -23,14 +23,7 @@ export class ConsoleService {
     return ConsoleService.instance;
   }
 
-  /**
-   * Read and parse output from the device
-   * @param code The code that was sent to the device
-   * @param streamCallback Callback function to stream output
-   * @returns A promise that resolves when the command completes
-   */
   async readAndParseOutput(
-    code: string,
     streamCallback: StreamCallback
   ): Promise<ReadOutputResult> {
     const logger = (msg: string, data?: any) => console.debug(`[ConsoleService] readAndParseOutput - ${msg}`, data || '');
@@ -145,7 +138,7 @@ export class ConsoleService {
 
       // Read and parse the output
       logger('Command sent, reading output');
-      const result = await this.readAndParseOutput(code, streamCallback);
+      const result = await this.readAndParseOutput(streamCallback);
       logger('Command execution completed', { success: result.success });
       return result;
     } catch (err) {

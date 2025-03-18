@@ -38,13 +38,11 @@ export class DeviceService {
     }
 
     try {
-      // Check if already connected
       if (this.isDeviceConnected) {
         console.log('Already connected, skipping connection');
         return;
       }
       
-      // Only try to connect if we have a port and it's not already open
       if (!this.port.readable && !this.port.writable) {
         this.transport?.connect()
       } else {
@@ -66,28 +64,22 @@ export class DeviceService {
   async disconnect(): Promise<void> {
     if (this.port) {
       try {
-        // First check if streams are locked
-        if ((this.port.readable && this.port.readable.locked) || 
+        if ((this.port.readable && this.port.readable.locked) ||
             (this.port.writable && this.port.writable.locked)) {
           console.warn('Serial port has locked streams. Cannot close directly.');
           
-          // Cannot close a locked port, so just mark as disconnected
           this.isDeviceConnected = false;
-          // Don't set this.port to null so that existing operations can complete
           return;
         }
         
-        // If streams aren't locked, close properly
         await this.port.close();
         console.log('Device disconnected successfully');
       } catch (err) {
         console.error('Failed to disconnect:', err);
       } finally {
-        // Always mark as disconnected
         this.isDeviceConnected = false;
       }
     } else {
-      // If there's no port, just update state
       this.isDeviceConnected = false;
     }
   }
@@ -125,9 +117,7 @@ export class DeviceService {
   }
 
   clearPort(): void {
-    // First check if we really have a port to clear
     if (this.port) {
-      // Only log if we're actually clearing something
       console.log('Clearing device port reference');
       this.port = null;
       this.transport = null;
@@ -148,15 +138,12 @@ export class DeviceService {
       
       const writer = this.transport.device.writable.getWriter();
       
-      // Send Ctrl+E to enter paste mode
       await writer.write(ctrl_e);
       await writer.write(new_line);
       
-      // Send the code with a marker
       const data = encoder.encode(code + "######START REQUEST######");
       await writer.write(data);
       
-      // Send Ctrl+D to execute
       await writer.write(ctrl_d);
       await writer.write(new_line);
       
@@ -216,7 +203,4 @@ export class DeviceService {
     return { text, done: false };
   }
 
-  decodeValue(value: Uint8Array): string {
-    return this.decoder.decode(value);
-  }
 }
