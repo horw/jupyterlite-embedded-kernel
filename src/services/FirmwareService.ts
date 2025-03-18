@@ -1,5 +1,5 @@
 import { DeviceService } from './DeviceService';
-import { firmwareOptions, FirmwareOption } from '../constants'
+import { firmwareOptions } from '../constants'
 
 export class FirmwareService {
   private static instance: FirmwareService;
@@ -35,7 +35,7 @@ export class FirmwareService {
   }
 
   setSelectedFirmwareId(id: string): void {
-    if (firmwareOptions.some(option => option.id === id)) {
+    if (id in firmwareOptions){
       this.selectedFirmwareId = id;
       this.firmwareString = null;
       this.firmwareBlob = null;
@@ -79,7 +79,7 @@ export class FirmwareService {
   }
   
   private async downloadSpecificFirmware(firmwareId: string): Promise<string> {
-    const selectedFirmware = firmwareOptions.find(option => option.id === firmwareId);
+    const selectedFirmware = firmwareOptions[firmwareId]
     if (!selectedFirmware || !selectedFirmware.url) {
       throw new Error(`Invalid firmware selection or no URL for: ${firmwareId}`);
     }

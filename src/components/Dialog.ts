@@ -13,7 +13,9 @@ export interface DialogProps {
 export class Dialog {
   private element: HTMLDivElement;
   private connectCard: ConnectCard;
-  private deviceService: DeviceService;
+  private flashCard: FlashCard;
+  private resetCard: Card;
+  private readonly deviceService: DeviceService;
 
   constructor(props: DialogProps) {
     this.deviceService = props.deviceService;
@@ -30,7 +32,7 @@ export class Dialog {
     const optionsContainer = this.createOptionsContainer();
 
     this.connectCard = new ConnectCard(this.getConnectCardProps(), () => props.deviceService.connect());
-    const flashCard = new FlashCard({
+    this.flashCard = new FlashCard({
       action: 'flash',
       icon: '⚡️',
       title: 'Flash Device',
@@ -38,7 +40,7 @@ export class Dialog {
       color: 'var(--ui-red)'
     }, () => props.flashService.flashDevice());
 
-    const resetCard = new Card({
+    this.resetCard = new Card({
       action: 'reset-esp',
       icon: '🔄',
       title: 'Hard reset Esp',
@@ -47,8 +49,8 @@ export class Dialog {
     }, () => props.deviceService.reset());
 
     optionsContainer.appendChild(this.connectCard.getElement());
-    optionsContainer.appendChild(flashCard.getElement());
-    optionsContainer.appendChild(resetCard.getElement());
+    optionsContainer.appendChild(this.flashCard.getElement());
+    optionsContainer.appendChild(this.resetCard.getElement());
 
     let content = document.createElement('div');
     content.className = 'welcome-dialog';
@@ -89,10 +91,6 @@ export class Dialog {
       description: isConnected ? 'Click to disconnect' : 'Connect to ESP32 device via serial',
       color: 'var(--ui-navy)'
     };
-  }
-
-  updateConnectCard(props: CardProps): void {
-    this.connectCard.update(props);
   }
 
   getElement(): HTMLDivElement {

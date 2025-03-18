@@ -49,8 +49,7 @@ export const overlayStyles = `
     justify-content: center;
     align-items: center;
     z-index: 1000;
-    opacity: 0;
-    visibility: hidden;
+    opacity: 1;
     transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
   }
 
@@ -137,7 +136,7 @@ export const dialogStyles = `
     padding: 2rem;
     position: relative;
     transform: translateY(20px);
-    opacity: 0;
+    opacity: 1;
     transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
   }
 

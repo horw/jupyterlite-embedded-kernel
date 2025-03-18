@@ -1,4 +1,3 @@
-import { Widget } from '@lumino/widgets';
 import { EmbeddedKernel } from './kernel';
 import { globalStyles, animations, overlayStyles, dialogStyles, minimizedStyles, cardStyles, buttonStyles, progressOverlayStyles } from './styles';
 import { DeviceService } from './services/DeviceService';
@@ -6,23 +5,93 @@ import { FlashService } from './services/FlashService';
 import { MinimizedButton } from './components/MinimizedButton';
 import { Dialog } from './components/Dialog';
 
-export default class WelcomePanel extends Widget {
-  private deviceService: DeviceService = DeviceService.getInstance();
-  private flashService: FlashService = FlashService.getInstance();
-  private minimizedButton: MinimizedButton;
-  private dialog!: Dialog;
+class DialogPanel {
+  private element: HTMLDivElement;
 
-  constructor() {
-    super();
-    this.id = 'kernel-welcome-panel';
-    this.addClass('jp-kernel-welcome-panel');
-
-    this.minimizedButton = new MinimizedButton(() => this.show());
-
+  constructor(dialog: Dialog) {
+    this.element = document.createElement('div');
+    this.element.id = 'dialog-widget-panel';
+    this.element.appendChild(dialog.getElement());
   }
 
-  async initUI(kernel: EmbeddedKernel): Promise<void> {
+  show(): void {
+    this.element.style.display = 'block';
+    this.element.classList.remove('minimized');
+    this.element.classList.add('visible');
 
+    this.element.style.transition = 'opacity 0.3s ease-in-out';
+    this.element.style.opacity = '1';
+  }
+
+  hide(): void {
+    this.element.classList.add('minimizing');
+    this.element.classList.remove('visible');
+    this.element.style.opacity = '0';
+
+    setTimeout(() => {
+      this.element.style.display = 'none';
+      this.element.classList.remove('minimizing');
+      this.element.classList.add('minimized');
+    }, 300);
+  }
+
+  getElement(): HTMLDivElement {
+    return this.element;
+  }
+}
+
+class MinimizedPanel {
+  private element: HTMLDivElement;
+  private minimizedButton: MinimizedButton;
+
+  constructor(minimizedButton: MinimizedButton) {
+    this.minimizedButton = minimizedButton;
+    this.element = document.createElement('div');
+    this.element.id = 'minimized-panel-widget-panel';
+    this.element.appendChild(minimizedButton.getElement());
+  }
+
+  show(): void {
+    this.element.style.display = 'block';
+    this.element.classList.remove('minimized');
+    this.element.classList.add('visible');
+
+    this.element.style.transition = 'opacity 0.3s ease-in-out';
+    this.element.style.opacity = '1';
+    this.minimizedButton.show();
+  }
+
+  hide(): void {
+    this.element.classList.add('minimizing');
+    this.element.classList.remove('visible');
+    this.element.style.opacity = '0';
+    this.minimizedButton.hide();
+
+    setTimeout(() => {
+      this.element.style.display = 'none';
+      this.element.classList.remove('minimizing');
+      this.element.classList.add('minimized');
+    }, 300);
+  }
+
+  getElement(): HTMLDivElement {
+    return this.element;
+  }
+}
+
+export default class WelcomePanel {
+  private element: HTMLDivElement;
+  private deviceService: DeviceService = DeviceService.getInstance();
+  private flashService: FlashService = FlashService.getInstance();
+
+  private minimizedPanel: MinimizedPanel;
+  private dialogPanel: DialogPanel;
+
+  constructor() {
+    this.element = document.createElement('div');
+    this.element.id = 'jp-kernel-welcome-panel';
+    
+    // Add styles
     let styleElement = document.createElement('style');
     styleElement.textContent = [
       globalStyles,
@@ -36,44 +105,46 @@ export default class WelcomePanel extends Widget {
     ].join('\n');
     document.head.appendChild(styleElement);
 
+    const minimizedButton = new MinimizedButton(() => this.show());
+    this.minimizedPanel = new MinimizedPanel(minimizedButton);
 
-    this.node.appendChild(this.minimizedButton.getElement());
+    const dialog = new Dialog({
+      closeDialog: () => this.hide(),
+      deviceService: this.deviceService,
+      flashService: this.flashService,
+    });
+    this.dialogPanel = new DialogPanel(dialog);
 
-    this.dialog = new Dialog(
-      {
-        closeDialog: () => this.hide(),
-        deviceService: this.deviceService,
-        flashService: this.flashService,
-      },
-    );
-    this.node.appendChild(this.dialog.getElement());
+    this.element.appendChild(this.minimizedPanel.getElement());
+    this.element.appendChild(this.dialogPanel.getElement());
+  }
 
+  getElement(): HTMLDivElement {
+    return this.element;
+  }
+
+  async initUI(kernel: EmbeddedKernel): Promise<void> {
     kernel.deviceService = this.deviceService;
   }
 
+  updated_device_connection_status(): void{
+
+  }
+
   show(): void {
-    console.log('Showing panel...');
-    this.node.style.display = 'block';
-    this.node.classList.remove('minimized');
-    this.node.classList.add('visible');
-    this.minimizedButton.hide();
-    
-    // Add transition for smooth appearance
-    this.node.style.transition = 'opacity 0.3s ease-in-out';
-    this.node.style.opacity = '1';
+    this.element.style.display = 'block';
+    this.element.classList.remove('minimized');
+    this.element.classList.add('visible');
+
+    this.element.style.transition = 'opacity 0.3s ease-in-out';
+    this.element.style.opacity = '1';
+
+    this.dialogPanel.show();
+    this.minimizedPanel.hide();
   }
 
   hide(): void {
-    console.log('Hiding panel...');
-    this.node.classList.add('minimizing');
-    this.node.classList.remove('visible');
-    this.node.style.opacity = '0';
-    
-    setTimeout(() => {
-      this.node.style.display = 'none';
-      this.node.classList.remove('minimizing');
-      this.node.classList.add('minimized');
-      this.minimizedButton.show();
-    }, 300);
+    this.dialogPanel.hide();
+    this.minimizedPanel.show();
   }
 }

@@ -89,17 +89,18 @@ export class FlashCard extends Card {
       this.dropdown.className = 'firmware-selector';
     
       const firmwareOptions = this.firmwareService.getFirmwareOptions();
-      firmwareOptions.forEach(option => {
+      
+      Object.entries(firmwareOptions).forEach(([id, option]) => {
         const optionElement = document.createElement('option');
-        optionElement.value = option.id;
+        optionElement.value = id;
         optionElement.textContent = option.name;
         this.dropdown.appendChild(optionElement);
       });
-    
+
       const deviceType = this.deviceService.getDeviceType();
       if (deviceType) {
-        this.dropdown.value = 'Auto';
-        this.firmwareService.setSelectedFirmwareId('Auto');
+        this.dropdown.value = 'auto';
+        this.firmwareService.setSelectedFirmwareId('auto');
       } else {
         this.dropdown.value = this.firmwareService.getSelectedFirmwareId();
       }

@@ -1,4 +1,4 @@
-import { Widget } from '@lumino/widgets';
+// Removed Widget import as we're no longer using @lumino/widgets
 import { JupyterLiteServer, JupyterLiteServerPlugin } from '@jupyterlite/server';
 import { IKernel, IKernelSpecs } from '@jupyterlite/kernel';
 import { EmbeddedKernel } from './kernel';
@@ -11,9 +11,6 @@ const kernelPlugin: JupyterLiteServerPlugin<void> = {
   requires: [IKernelSpecs],
   activate: (app: JupyterLiteServer, kernelspecs: IKernelSpecs) => {
     const activeKernels = new Map<string, EmbeddedKernel>();
-
-    const welcomePanel = new WelcomePanel();
-    Widget.attach(welcomePanel, document.body);
 
     app.router.post('/api/kernels/(.*)/interrupt', async (req, kernelId: string) => {
       const kernel = activeKernels.get(kernelId);
@@ -41,6 +38,9 @@ const kernelPlugin: JupyterLiteServerPlugin<void> = {
         },
       },
       create: async (options: IKernel.IOptions): Promise<IKernel> => {
+        const welcomePanel = new WelcomePanel();
+        document.body.appendChild(welcomePanel.getElement());
+
         const kernel = new EmbeddedKernel(options);
 
         await welcomePanel.initUI(kernel);
