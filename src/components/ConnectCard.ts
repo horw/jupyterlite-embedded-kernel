@@ -9,14 +9,12 @@ export class ConnectCard extends Card {
     super(props, onClick);
     this.deviceService = DeviceService.getInstance();
     
-    // Listen for device connection events
     document.addEventListener('deviceConnected', (event: Event) => {
       const customEvent = event as CustomEvent;
       if (customEvent.detail && customEvent.detail.deviceType) {
         this.deviceType = customEvent.detail.deviceType;
 
         console.log("device was connected")
-        // Update the connect card with device information
         this.updateConnectCardWithDeviceInfo();
       }
     });
@@ -25,7 +23,6 @@ export class ConnectCard extends Card {
   private updateConnectCardWithDeviceInfo(): void {
     const isConnected = this.deviceService.isConnected();
     
-    // Format device type for display
     let displayName = 'ESP32';
     if (this.deviceType.includes('C6')) {
       displayName = 'ESP32-C6';
@@ -33,7 +30,6 @@ export class ConnectCard extends Card {
       displayName = 'ESP32-C3';
     }
     
-    // Update the card to show device connection status with specific device type
     this.update({
       action: 'connect',
       icon: isConnected ? '✓' : '🔌',

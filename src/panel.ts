@@ -20,7 +20,10 @@ export default class WelcomePanel extends Widget {
     this.addClass('jp-kernel-welcome-panel');
 
     this.minimizedButton = new MinimizedButton(() => this.show());
-    document.body.appendChild(this.minimizedButton.getElement());
+
+  }
+
+  async initUI(kernel: EmbeddedKernel): Promise<void> {
 
     let styleElement = document.createElement('style');
     styleElement.textContent = [
@@ -35,9 +38,9 @@ export default class WelcomePanel extends Widget {
     ].join('\n');
     document.head.appendChild(styleElement);
 
-  }
 
-  async initUI(kernel: EmbeddedKernel): Promise<void> {
+    this.node.appendChild(this.minimizedButton.getElement());
+
     this.dialog = new Dialog(
       {
         onCloseDialog: () => this.hide(),
@@ -49,8 +52,8 @@ export default class WelcomePanel extends Widget {
       },
       ()=> this.hide()
     );
-
     this.node.appendChild(this.dialog.getElement());
+
     kernel.deviceService = this.deviceService;
   }
 

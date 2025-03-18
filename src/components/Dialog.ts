@@ -32,7 +32,6 @@ export class Dialog {
     const header = this.createHeader();
     const optionsContainer = this.createOptionsContainer();
 
-    // Create cards
     this.connectCard = new ConnectCard(this.getConnectCardProps(), props.onConnect);
     const flashCard = new FlashCard({
       action: 'flash',

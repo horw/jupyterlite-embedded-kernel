@@ -58,14 +58,10 @@ export class ProgressOverlay {
   }
   
   setTitle(title: string): void {
-    // Check if this is a firmware flashing title
     if (title.includes('Flashing') && title.includes('Firmware')) {
-      // Extract the firmware name from between 'Flashing ' and ' Firmware...'
       const match = title.match(/Flashing (.+?) Firmware\.\.\./i);
-      
       if (match && match[1]) {
         const firmwareName = match[1];
-        // Use HTML to highlight the firmware name
         this.titleEl.innerHTML = `Flashing <span class="firmware-name">${firmwareName}</span> Firmware...`;
       } else {
         this.titleEl.textContent = title;
