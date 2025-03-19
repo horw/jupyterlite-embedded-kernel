@@ -1,6 +1,7 @@
 export class MinimizedButton {
   private element: HTMLElement;
   private deviceLabel: HTMLSpanElement;
+  private statusIndicator: HTMLSpanElement;
 
   constructor(onShow: () => void) {
     this.element = document.createElement('div');
@@ -23,26 +24,17 @@ export class MinimizedButton {
     const statusWrapper = document.createElement('div');
     statusWrapper.className = 'status-wrapper';
     
-    const statusIndicator = document.createElement('span');
-    statusIndicator.className = 'status-indicator';
-    statusWrapper.appendChild(statusIndicator);
+    this.statusIndicator = document.createElement('span');
+    this.statusIndicator.className = 'status-indicator';
+    statusWrapper.appendChild(this.statusIndicator);
     
     this.deviceLabel = document.createElement('span');
     this.deviceLabel.className = 'device-label';
     this.deviceLabel.textContent = 'Not connected';
     statusWrapper.appendChild(this.deviceLabel);
-    
-    contentContainer.appendChild(statusWrapper);
-    
-    minimizedButton.appendChild(contentContainer);
-    
-    document.addEventListener('deviceConnected', (event: Event) => {
-      const customEvent = event as CustomEvent;
-      if (customEvent.detail && customEvent.detail.deviceType) {
-        this.updateDeviceLabel(customEvent.detail.deviceType);
-      }
-    });
 
+    contentContainer.appendChild(statusWrapper);
+    minimizedButton.appendChild(contentContainer);
     this.element.appendChild(minimizedButton);
   }
 
@@ -57,22 +49,15 @@ export class MinimizedButton {
   getElement(): HTMLElement {
     return this.element;
   }
-  
-  updateDeviceLabel(deviceType: string): void {
-    const statusIndicator = this.element.querySelector('.status-indicator') as HTMLElement;
-    if (statusIndicator) {
-      statusIndicator.classList.add('connected');
-    }
-    
-    let displayName = 'ESP32';
-    
-    if (deviceType.includes('C6')) {
-      displayName = 'ESP32-C6';
-    } else if (deviceType.includes('C3')) {
-      displayName = 'ESP32-C3';
-    }
-    
-    this.deviceLabel.textContent = displayName;
-    this.element.title = `Open ESP32 Device Manager (${displayName})`;
+
+  updateOnConnection(msg: string){
+    this.statusIndicator.classList.add('connected');
+    this.deviceLabel.textContent = msg;
+    this.element.title = `Open ESP32 Device Manager (${msg})`;
+  }
+  updateOnDisconnection(msg: string){
+    this.statusIndicator.classList.add('disconnected');
+    this.deviceLabel.textContent = msg;
+    this.element.title = `Open ESP32 Device Manager (${msg})`;
   }
 }

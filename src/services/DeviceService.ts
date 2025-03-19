@@ -1,21 +1,13 @@
 import { Transport } from 'esptool-js';
 
 export class DeviceService {
-  private static instance: DeviceService;
   private port: SerialPort | null = null;
   private transport: Transport | null = null;
   private isDeviceConnected: boolean = false;
   private deviceType: string = '';
   private decoder: TextDecoder = new TextDecoder();
 
-  private constructor() {}
-
-  static getInstance(): DeviceService {
-    if (!DeviceService.instance) {
-      DeviceService.instance = new DeviceService();
-    }
-    return DeviceService.instance;
-  }
+  constructor() {}
 
   async requestPort(): Promise<void> {
     try {
@@ -55,8 +47,8 @@ export class DeviceService {
       throw err;
     }
     
-    const event = new CustomEvent("device connected", {
-        detail: { title: "new device connected" }
+    const event = new CustomEvent("deviceConnected", {
+        detail: { msg: "Connected" }
     });
     document.dispatchEvent(event)
   }
@@ -67,7 +59,6 @@ export class DeviceService {
         if ((this.port.readable && this.port.readable.locked) ||
             (this.port.writable && this.port.writable.locked)) {
           console.warn('Serial port has locked streams. Cannot close directly.');
-          
           this.isDeviceConnected = false;
           return;
         }
@@ -82,6 +73,11 @@ export class DeviceService {
     } else {
       this.isDeviceConnected = false;
     }
+
+    const event = new CustomEvent("deviceDisconnected", {
+      detail: { msg: "Not connected" }
+    });
+    document.dispatchEvent(event)
   }
 
   async reset(): Promise<void> {
@@ -176,7 +172,7 @@ export class DeviceService {
     }
   }
 
-  async readFromDevice(): Promise<IteratorResult<Uint8Array, any>> {
+  private async readFromDevice(): Promise<IteratorResult<Uint8Array, any>> {
     if (!this.transport || !this.transport.device.readable) {
       console.error('Transport not readable in readFromDevice');
       return { value: undefined, done: true };

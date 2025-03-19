@@ -1,13 +1,11 @@
-import { Card, CardProps } from './Card';
-import { DeviceService } from '../services/DeviceService';
-import { FlashService } from '../services/FlashService';
+import { Card } from './Card';
 import { FlashCard } from './FlashCard';
 import { ConnectCard } from './ConnectCard';
+import { ServiceContainer } from '../services/ServiceContainer';
 
 export interface DialogProps {
   closeDialog: () => void;
-  deviceService: DeviceService;
-  flashService: FlashService;
+  serviceContainer: ServiceContainer;
 }
 
 export class Dialog {
@@ -15,10 +13,8 @@ export class Dialog {
   private connectCard: ConnectCard;
   private flashCard: FlashCard;
   private resetCard: Card;
-  private readonly deviceService: DeviceService;
 
   constructor(props: DialogProps) {
-    this.deviceService = props.deviceService;
     this.element = document.createElement('div');
     this.element.className = 'welcome-overlay';
     this.element.addEventListener('click', (e) => {
@@ -31,14 +27,26 @@ export class Dialog {
     const header = this.createHeader();
     const optionsContainer = this.createOptionsContainer();
 
-    this.connectCard = new ConnectCard(this.getConnectCardProps(), () => props.deviceService.connect());
+    this.connectCard = new ConnectCard(
+      {
+        action: 'connect',
+        icon: '🔌',
+        title: 'Connect Device',
+        description: 'Connect to ESP32 device via serial',
+        color: 'var(--ui-navy)'
+      },
+      props.serviceContainer.deviceService);
+
     this.flashCard = new FlashCard({
       action: 'flash',
       icon: '⚡️',
       title: 'Flash Device',
       description: 'Flash your device with the latest firmware',
       color: 'var(--ui-red)'
-    }, () => props.flashService.flashDevice());
+    }, 
+    () => props.serviceContainer.flashService.flashDevice(),
+    props.serviceContainer.firmwareService,
+    props.serviceContainer.deviceService);
 
     this.resetCard = new Card({
       action: 'reset-esp',
@@ -46,7 +54,7 @@ export class Dialog {
       title: 'Hard reset Esp',
       description: 'Hard reset esp chip',
       color: 'var(--ui-red)'
-    }, () => props.deviceService.reset());
+    }, () => props.serviceContainer.deviceService.reset());
 
     optionsContainer.appendChild(this.connectCard.getElement());
     optionsContainer.appendChild(this.flashCard.getElement());
@@ -80,17 +88,6 @@ export class Dialog {
     const container = document.createElement('div');
     container.style.cssText = 'display: flex; flex-direction: column; gap: 1rem;';
     return container;
-  }
-  
-  private getConnectCardProps(): CardProps {
-    const isConnected = this.deviceService.isConnected();
-    return {
-      action: 'connect',
-      icon: isConnected ? '✓' : '🔌',
-      title: isConnected ? 'Device Connected' : 'Connect Device',
-      description: isConnected ? 'Click to disconnect' : 'Connect to ESP32 device via serial',
-      color: 'var(--ui-navy)'
-    };
   }
 
   getElement(): HTMLDivElement {

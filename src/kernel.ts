@@ -1,11 +1,12 @@
 import { BaseKernel } from '@jupyterlite/kernel';
 import { KernelMessage } from '@jupyterlab/services';
-import { DeviceService } from './services/DeviceService';
-import { ConsoleService } from './services/ConsoleService';
+import { ServiceContainer } from './services/ServiceContainer';
 
 export class EmbeddedKernel extends BaseKernel {
-  public deviceService: DeviceService = DeviceService.getInstance();
-  private consoleService: ConsoleService = ConsoleService.getInstance();
+
+  constructor(options: any, private serviceContainer: ServiceContainer) {
+    super(options);
+  }
 
   async kernelInfoRequest(): Promise<KernelMessage.IInfoReplyMsg['content']> {
     const content: KernelMessage.IInfoReply = {
@@ -33,7 +34,7 @@ export class EmbeddedKernel extends BaseKernel {
   }
 
   async interrupt(): Promise<void> {
-    await this.deviceService.sendInterrupt();
+    await this.serviceContainer.deviceService.sendInterrupt();
   }
 
   async executeRequest(
@@ -41,7 +42,7 @@ export class EmbeddedKernel extends BaseKernel {
   ): Promise<KernelMessage.IExecuteReplyMsg['content']> {
 
     console.log("[Kernel] executeRequest - Starting execution");
-    if (this.deviceService == undefined){
+    if (this.serviceContainer.deviceService == undefined){
       console.log("[Kernel] executeRequest - DeviceService is undefined");
       return {
           status: 'error',
@@ -57,7 +58,7 @@ export class EmbeddedKernel extends BaseKernel {
 
     try {
       console.log("[Kernel] executeRequest - Checking transport");
-      const transport = this.deviceService.getTransport();
+      const transport = this.serviceContainer.deviceService.getTransport();
       console.log(transport)
       if (!transport) {
         console.log("[Kernel] executeRequest - No transport available");
@@ -72,7 +73,7 @@ export class EmbeddedKernel extends BaseKernel {
       
       console.log("[Kernel] executeRequest - Executing command via ConsoleService");
       // Execute the command and handle the output
-      const result = await this.consoleService.executeCommand(code, (content) => {
+      const result = await this.serviceContainer.consoleService.executeCommand(code, (content) => {
         console.log("[Kernel] executeRequest - Streaming output:", content.text.substring(0, 50) + (content.text.length > 50 ? '...' : ''));
         this.stream(content);
       });

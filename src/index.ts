@@ -3,6 +3,7 @@ import { JupyterLiteServer, JupyterLiteServerPlugin } from '@jupyterlite/server'
 import { IKernel, IKernelSpecs } from '@jupyterlite/kernel';
 import { EmbeddedKernel } from './kernel';
 import WelcomePanel from './panel';
+import { ServiceContainer } from './services/ServiceContainer';
 
 // Kernel plugin for the embedded kernel
 const kernelPlugin: JupyterLiteServerPlugin<void> = {
@@ -38,12 +39,13 @@ const kernelPlugin: JupyterLiteServerPlugin<void> = {
         },
       },
       create: async (options: IKernel.IOptions): Promise<IKernel> => {
-        const welcomePanel = new WelcomePanel();
+
+        const serviceContainer = new ServiceContainer()
+
+        const welcomePanel = new WelcomePanel(serviceContainer);
         document.body.appendChild(welcomePanel.getElement());
+        const kernel = new EmbeddedKernel(options, serviceContainer);
 
-        const kernel = new EmbeddedKernel(options);
-
-        await welcomePanel.initUI(kernel);
         welcomePanel.show();
         await kernel.ready;
 

@@ -1,29 +1,18 @@
-import { DeviceService } from './DeviceService';
 import { firmwareOptions } from '../constants'
+import { DeviceService } from './DeviceService';
 
 export class FirmwareService {
-  private static instance: FirmwareService;
-  private deviceService: DeviceService;
   private firmwareString: string | null = null;
   private firmwareBlob: Blob | null = null;
   private selectedFirmwareId: string = 'Auto';
   
-  private constructor() {
-    this.deviceService = DeviceService.getInstance();
-    
+  constructor(private deviceService: DeviceService) {
     const savedSelection = localStorage.getItem('selectedFirmwareId');
     if (savedSelection) {
       this.selectedFirmwareId = savedSelection;
     } else {
       this.selectedFirmwareId = 'auto';
     }
-  }
-
-  static getInstance(): FirmwareService {
-    if (!FirmwareService.instance) {
-      FirmwareService.instance = new FirmwareService();
-    }
-    return FirmwareService.instance;
   }
 
   getFirmwareOptions(){

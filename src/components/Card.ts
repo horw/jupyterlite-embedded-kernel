@@ -9,15 +9,15 @@ export interface CardProps {
 export class Card {
   protected element: HTMLElement;
 
-  constructor(props: CardProps, onClick: () => void) {
+  constructor(props: any, onClick: () => void) {
     this.element = document.createElement('div');
     this.element.className = 'welcome-card';
-    this.element.setAttribute('data-action', props.action);
-    this.update(props);
     this.element.addEventListener('click', onClick);
+    this.processCardUI(props)
   }
 
-  update(props: CardProps): void {
+  processCardUI(props: any): void {
+    props = props as CardProps;
     this.element.innerHTML = `
       <div class="card-content">
         <span class="welcome-icon">${props.icon}</span>

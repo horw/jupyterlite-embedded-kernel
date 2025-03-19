@@ -3,17 +3,17 @@ import { FirmwareService } from '../services/FirmwareService';
 import { DeviceService } from '../services/DeviceService';
 
 export class FlashCard extends Card {
-  private firmwareService: FirmwareService;
-  private deviceService: DeviceService;
   private dropdown!: HTMLSelectElement;
   private cardContent!: HTMLDivElement;
   private deviceInfoElement: HTMLDivElement | null = null;
 
-  constructor(props: CardProps, onClick: () => void) {
+  constructor(
+    props: CardProps,
+    onClick: () => void,
+    private firmwareService: FirmwareService,
+    private deviceService: DeviceService
+  ) {
     super(props, onClick);
-    this.firmwareService = FirmwareService.getInstance();
-    this.deviceService = DeviceService.getInstance();
-    
     setTimeout(() => this.initializeFlashCard(), 0);
   }
 
@@ -28,19 +28,9 @@ export class FlashCard extends Card {
   }
   
   private setupEventListeners(): void {
-    document.addEventListener('deviceConnected', () => {
-      console.log('FlashCard received deviceConnected event');
-      this.updateDeviceInfo();
-      
-      if (this.dropdown) {
-        this.dropdown.value = this.firmwareService.getSelectedFirmwareId();
-      }
-    });
-    
     document.addEventListener('flashComplete', () => {
-      console.log('FlashCard received flashComplete event');
       this.updateDeviceInfo();
-      
+
       if (this.dropdown) {
         this.dropdown.value = this.firmwareService.getSelectedFirmwareId();
       }
@@ -48,9 +38,6 @@ export class FlashCard extends Card {
   }
 
   private createFirmwareDropdown(): void {
-    if (!this.firmwareService) {
-      console.error('FirmwareService is not initialized');
-    }
 
     try {
       this.cardContent = this.element.querySelector('.card-content') as HTMLDivElement;

@@ -1,7 +1,6 @@
 import { KernelMessage } from '@jupyterlab/services';
-import { DeviceService } from './DeviceService';
 import { ErrorHandler } from '../utils/ErrorHandler';
-
+import { DeviceService } from './DeviceService';
 export type StreamCallback = (content: KernelMessage.IStreamMsg['content']) => void;
 export interface ReadOutputResult {
   success: boolean;
@@ -9,19 +8,8 @@ export interface ReadOutputResult {
 }
 
 export class ConsoleService {
-  private static instance: ConsoleService;
-  private deviceService: DeviceService;
 
-  private constructor() {
-    this.deviceService = DeviceService.getInstance();
-  }
-
-  static getInstance(): ConsoleService {
-    if (!ConsoleService.instance) {
-      ConsoleService.instance = new ConsoleService();
-    }
-    return ConsoleService.instance;
-  }
+  constructor(private deviceService: DeviceService) {}
 
   async readAndParseOutput(
     streamCallback: StreamCallback
@@ -31,11 +19,10 @@ export class ConsoleService {
     
     let buffer = '';
     let outputStarted = false;
-    let timeout = 10000; // 10 seconds timeout
+    let timeout = 10000;
     const startTime = Date.now();
 
     try {
-      // Ensure we can read from the device
       const transport = this.deviceService.getTransport();
       if (!transport || !transport.device.readable) {
         const error = 'Device transport not readable';
@@ -62,7 +49,6 @@ export class ConsoleService {
           logger('Received text', truncate(text));
           logger('Current buffer', truncate(buffer));
           
-          // Check if we've found the start marker
           if (!outputStarted && buffer.includes('######START REQUEST######')) {
             logger('Start marker found');
             outputStarted = true;
@@ -79,7 +65,6 @@ export class ConsoleService {
             });
           }
 
-          // If we're collecting output and we see '>>', we're done
           if (outputStarted && buffer.includes('>>>')) {
             const output = buffer.split('>>>')[0].trim();
             logger('Output complete', truncate(output));
@@ -87,7 +72,6 @@ export class ConsoleService {
           }
         }
 
-        // Check for timeout
         if (Date.now() - startTime > timeout) {
           logger('Timeout reached');
           return { 
@@ -96,7 +80,6 @@ export class ConsoleService {
           };
         }
 
-        // Small delay to prevent tight loop
         await new Promise(resolve => setTimeout(resolve, 20));
       }
 
@@ -111,12 +94,6 @@ export class ConsoleService {
     }
   }
 
-  /**
-   * Send a command to the device and read the output
-   * @param code The code to send to the device
-   * @param streamCallback Callback function to stream output
-   * @returns A promise that resolves when the command completes
-   */
   async executeCommand(
     code: string,
     streamCallback: StreamCallback
@@ -125,7 +102,6 @@ export class ConsoleService {
     logger('Starting command execution');
     
     try {
-      // Send the command
       logger('Sending command to device');
       const sendSuccess = await this.deviceService.sendCommand(code);
       if (!sendSuccess) {
@@ -136,7 +112,6 @@ export class ConsoleService {
         };
       }
 
-      // Read and parse the output
       logger('Command sent, reading output');
       const result = await this.readAndParseOutput(streamCallback);
       logger('Command execution completed', { success: result.success });
@@ -150,22 +125,15 @@ export class ConsoleService {
     }
   }
 
-  /**
-   * Reset the console by sending a Ctrl+C to interrupt any running process
-   * and attempt to get a clean prompt
-   */
   async resetConsole(): Promise<void> {
     const logger = (msg: string) => console.debug(`[ConsoleService] resetConsole - ${msg}`);
     logger('Sending reset sequence');
     
     try {
-      // Send Ctrl+C to interrupt any running process
       await this.deviceService.sendInterrupt();
       
-      // Give it a moment to process
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Send a few newlines to get a clean prompt
       const encoder = new TextEncoder();
       const newLine = encoder.encode('\r\n');
 

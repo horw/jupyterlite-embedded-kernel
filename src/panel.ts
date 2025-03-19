@@ -1,9 +1,7 @@
-import { EmbeddedKernel } from './kernel';
 import { globalStyles, animations, overlayStyles, dialogStyles, minimizedStyles, cardStyles, buttonStyles, progressOverlayStyles } from './styles';
-import { DeviceService } from './services/DeviceService';
-import { FlashService } from './services/FlashService';
 import { MinimizedButton } from './components/MinimizedButton';
 import { Dialog } from './components/Dialog';
+import { ServiceContainer } from './services/ServiceContainer';
 
 class DialogPanel {
   private element: HTMLDivElement;
@@ -77,21 +75,27 @@ class MinimizedPanel {
   getElement(): HTMLDivElement {
     return this.element;
   }
+
+
+  updateOnConnection(msg: string): void{
+    this.minimizedButton.updateOnConnection(msg)
+  }
+  updateOnDisconnection(msg: string): void{
+    this.minimizedButton.updateOnDisconnection(msg)
+  }
 }
 
 export default class WelcomePanel {
   private element: HTMLDivElement;
-  private deviceService: DeviceService = DeviceService.getInstance();
-  private flashService: FlashService = FlashService.getInstance();
 
   private minimizedPanel: MinimizedPanel;
   private dialogPanel: DialogPanel;
 
-  constructor() {
+  constructor(private serviceContainer: ServiceContainer) {
+
     this.element = document.createElement('div');
     this.element.id = 'jp-kernel-welcome-panel';
     
-    // Add styles
     let styleElement = document.createElement('style');
     styleElement.textContent = [
       globalStyles,
@@ -110,25 +114,45 @@ export default class WelcomePanel {
 
     const dialog = new Dialog({
       closeDialog: () => this.hide(),
-      deviceService: this.deviceService,
-      flashService: this.flashService,
+      serviceContainer: this.serviceContainer,
     });
     this.dialogPanel = new DialogPanel(dialog);
 
     this.element.appendChild(this.minimizedPanel.getElement());
     this.element.appendChild(this.dialogPanel.getElement());
+
+    document.addEventListener('deviceConnected', (event: Event) => {
+      const customEvent = event as CustomEvent;
+      if (customEvent.detail)
+      {
+        if (customEvent.detail.msg) {
+          console.log(customEvent.detail.msg)
+          this.updateOnConnection(customEvent.detail.msg)
+        }
+      }
+    });
+
+    document.addEventListener('deviceDisconnected', (event: Event) => {
+      const customEvent = event as CustomEvent;
+      if (customEvent.detail)
+      {
+        if (customEvent.detail.msg) {
+          console.log(customEvent.detail.msg)
+          this.updateOnDisconnection(customEvent.detail.msg)
+        }
+      }
+    });
   }
 
   getElement(): HTMLDivElement {
     return this.element;
   }
 
-  async initUI(kernel: EmbeddedKernel): Promise<void> {
-    kernel.deviceService = this.deviceService;
+  updateOnConnection(connection_msg: string): void{
+    this.minimizedPanel.updateOnConnection(connection_msg)
   }
-
-  updated_device_connection_status(): void{
-
+  updateOnDisconnection(connection_msg: string): void{
+    this.minimizedPanel.updateOnConnection(connection_msg)
   }
 
   show(): void {
