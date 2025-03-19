@@ -21,15 +21,13 @@ export class FlashService {
   async flashDevice(): Promise<void> {
     const progressOverlay = new ProgressOverlay();
     try {
-      await this.deviceService.disconnect();
-      this.deviceService.clearPort();
-      
-      await this.deviceService.requestPort();
-
       const transport = this.deviceService.getTransport();
       if (!transport) {
         throw new Error('Failed to get device transport');
       }
+      try{
+        await transport.disconnect()
+      } catch (err){}
 
       const currentFirmware = this.firmwareService.getSelectedFirmwareId();
       progressOverlay.show(currentFirmware);
