@@ -1,6 +1,6 @@
 {
   "name": "jupyterlite_embedded_kernel",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "JupyterLite - Pyodide Kernel Extension",
   "homepage": "https://github.com/jupyterlite/pyodide-kernel",
   "bugs": {
@@ -22,9 +22,9 @@
     "lib": "lib/"
   },
   "files": [
-    "lib/*.d.ts",
-    "lib/*.js.map",
-    "lib/*.js",
+    "lib/**/*.d.ts",
+    "lib/**/*.js.map",
+    "lib/**/*.js",
     "style/*.css",
     "style/**/*.svg",
     "style/index.js",
