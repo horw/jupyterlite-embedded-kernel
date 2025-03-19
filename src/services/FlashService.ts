@@ -21,6 +21,11 @@ export class FlashService {
   async flashDevice(): Promise<void> {
     const progressOverlay = new ProgressOverlay();
     try {
+      if (!this.deviceService.getTransport()){
+        this.deviceService.clearPort();
+        await this.deviceService.requestPort();
+      }
+
       const transport = this.deviceService.getTransport();
       if (!transport) {
         throw new Error('Failed to get device transport');
