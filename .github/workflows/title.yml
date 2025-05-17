@@ -13,3 +13,4 @@ jobs:
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
           auto-update: true
           model: gemini-2.0-flash
+          quiet: true
