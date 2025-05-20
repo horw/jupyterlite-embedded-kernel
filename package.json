@@ -21,16 +21,16 @@
   "directories": {
     "lib": "lib/"
   },
+  "style": "style/index.css",
+  "styleModule": "style/index.js",
   "files": [
-    "lib/**/*.d.ts",
-    "lib/**/*.js.map",
-    "lib/**/*.js",
-    "style/*.css",
-    "style/**/*.svg",
-    "style/index.js",
+    "lib/**/*.{d.ts,eot,gif,html,jpg,js,js.map,json,png,svg,woff2,ttf}",
+    "style/**/*.{css,js,eot,gif,html,jpg,json,png,svg,woff2,ttf}",
+    "src/**/*.{ts,tsx}",
     "schema/*.json"
   ],
   "scripts": {
+    "serve": "cd _output && python -m http.server",
     "build": "jlpm build:lib && jlpm build:labextension:dev",
     "build:prod": "jlpm build:lib && jlpm build:labextension",
     "build:labextension": "jupyter labextension build .",
@@ -43,6 +43,7 @@
     "clean:all": "jlpm clean:lib && jlpm clean:labextension",
     "docs": "typedoc src",
     "watch": "run-p watch:src watch:labextension",
+    "output": "jupyter lite build",
     "watch:src": "tsc -w",
     "watch:labextension": "jupyter labextension watch .",
     "setup:py": "python -m pip install -e \".[dev,lint,test,docs]\""
@@ -51,6 +52,7 @@
     "@jupyterlab/application": "^4.3.5",
     "@jupyterlab/coreutils": "^6.1.1",
     "@jupyterlab/launcher": "^4.3.5",
+    "@jupyterlab/notebook": "^4.4.2",
     "@jupyterlite/contents": "^0.5.0-alpha.0",
     "@jupyterlite/kernel": "^0.5.0-alpha.0",
     "@jupyterlite/pyodide-kernel": "^0.5.0-beta.0",
@@ -63,6 +65,7 @@
     "@jupyterlab/builder": "~4.3.3",
     "@types/w3c-web-serial": "^1.0.7",
     "rimraf": "^5.0.1",
+    "style-loader": "^3.3.1",
     "typescript": "~5.2.2"
   },
   "publishConfig": {

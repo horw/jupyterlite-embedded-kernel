@@ -14,10 +14,6 @@ export class FlashService {
     private firmwareService: FirmwareService
   ) {}
 
-  static getInstance(): FlashService {
-    throw new Error('FlashService.getInstance is deprecated. Use dependency injection instead.');
-  }
-
   async flashDevice(): Promise<void> {
     const progressOverlay = new ProgressOverlay();
     try {
@@ -30,9 +26,6 @@ export class FlashService {
       if (!transport) {
         throw new Error('Failed to get device transport');
       }
-      try{
-        await transport.disconnect()
-      } catch (err){}
 
       const currentFirmware = this.firmwareService.getSelectedFirmwareId();
       progressOverlay.show(currentFirmware);
@@ -42,36 +35,10 @@ export class FlashService {
         romBaudrate: 115600
       };
       const esploader = new ESPLoader(loaderOptions);
-
-      if (transport && transport.device) {
-        const port = transport.device;
-        const readLocked = port.readable ? port.readable.locked || false : false;
-        const writeLocked = port.writable ? port.writable.locked || false : false;
-
-        console.log('Stream state before esploader.main():', {
-          readLocked,
-          writeLocked,
-          port
-        });
-      }
       progressOverlay.setStatus('Connecting to device...');
       const deviceInfo = await esploader.main();
       console.log("[flashDevice] current device is", deviceInfo);
-      if (transport && transport.device) {
-        const port = transport.device;
-        const readLocked = port.readable ? port.readable.locked || false : false;
-        const writeLocked = port.writable ? port.writable.locked || false : false;
 
-        console.log('Stream state after esploader.main():', {
-          readLocked,
-          writeLocked,
-          port,
-        },
-          esploader.transport.device
-        );
-
-        // await port.close()
-      }
 
       if (deviceInfo) {
         console.log(deviceInfo)
@@ -135,32 +102,8 @@ export class FlashService {
         calculateMD5Hash: (image: string) => CryptoJS.MD5(CryptoJS.enc.Latin1.parse(image)).toString()
       };
 
-      if (transport && transport.device) {
-        const port = transport.device;
-        const readLocked = port.readable ? port.readable.locked || false : false;
-        const writeLocked = port.writable ? port.writable.locked || false : false;
-
-        console.log('Stream state before flashing:', {
-          readLocked,
-          writeLocked
-        });
-      }
-
       await esploader.writeFlash(flashOptions);
       progressOverlay.setStatus('Flash complete!');
-      
-      if (transport && transport.device) {
-        const port = transport.device;
-        const readLocked = port.readable ? port.readable.locked || false : false;
-        const writeLocked = port.writable ? port.writable.locked || false : false;
-        
-        console.log('Stream state after flashing:', {
-          readLocked,
-          writeLocked
-        });
-        
-        progressOverlay.setStatus(`Flash complete! Streams: Read ${readLocked ? 'LOCKED' : 'unlocked'}, Write ${writeLocked ? 'LOCKED' : 'unlocked'}`);
-      }
 
       const flashCompleteEvent = new CustomEvent('flashComplete', {
         detail: { success: true }
@@ -172,37 +115,12 @@ export class FlashService {
       console.log('Hard resetting via RTS pin...');
       try {
         await esploader.after();
-        
-        const transportAfter = this.deviceService.getTransport();
-        if (transportAfter && transportAfter.device) {
-          const port = transportAfter.device;
-          const readLocked = port.readable ? port.readable.locked || false : false;
-          const writeLocked = port.writable ? port.writable.locked || false : false;
-          
-          console.log('Stream state after esploader.after():', {
-            readLocked,
-            writeLocked
-          });
-          
-          progressOverlay.setStatus(`After ESP reset. Streams: Read ${readLocked ? 'LOCKED' : 'unlocked'}, Write ${writeLocked ? 'LOCKED' : 'unlocked'}`);
-        }
+
       } catch (afterError) {
         console.warn('Error during esploader.after():', afterError);
       }
 
       try {
-        const transportBeforeReset = this.deviceService.getTransport();
-        if (transportBeforeReset && transportBeforeReset.device) {
-          const port = transportBeforeReset.device;
-          const readLocked = port.readable ? port.readable.locked || false : false;
-          const writeLocked = port.writable ? port.writable.locked || false : false;
-          
-          console.log('Stream state before device reset:', {
-            readLocked,
-            writeLocked
-          });
-        }
-        
         progressOverlay.setStatus('Resetting device...');
         await this.deviceService.reset();
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -218,26 +136,7 @@ export class FlashService {
 
       await transport.disconnect();
       try {
-        const transportBeforeDisconnect = this.deviceService.getTransport();
-        if (transportBeforeDisconnect && transportBeforeDisconnect.device) {
-          const port = transportBeforeDisconnect.device;
-          const readLocked = port.readable ? port.readable.locked || false : false;
-          const writeLocked = port.writable ? port.writable.locked || false : false;
-          
-          console.log('Stream state before disconnect:', {
-            readLocked,
-            writeLocked
-          });
-          
-          progressOverlay.setStatus(`Cleaning up... Streams: Read ${readLocked ? 'LOCKED' : 'unlocked'}, Write ${writeLocked ? 'LOCKED' : 'unlocked'}`);
-          if (readLocked || writeLocked) {
-            console.log('Waiting for streams to unlock before disconnect...');
-            await new Promise(resolve => setTimeout(resolve, 1000));
-          }
-        } else {
-          progressOverlay.setStatus('Cleaning up connections...');
-        }
-
+        progressOverlay.setStatus('Cleaning up connections...');
       } catch (disconnectError) {
         console.warn('Error during device disconnect:', disconnectError);
       }
