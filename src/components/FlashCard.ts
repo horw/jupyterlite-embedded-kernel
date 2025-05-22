@@ -14,17 +14,16 @@ export class FlashCard extends Card {
     private deviceService: DeviceService
   ) {
     super(props, onClick);
-    setTimeout(() => this.initializeFlashCard(), 0);
+    this.initializeFlashCard()
   }
 
   private initializeFlashCard(): void {
     this.createFirmwareDropdown();
-    
     if (this.dropdown) {
       this.handleDropdownClickEvents();
     }
-    
     this.setupEventListeners();
+    this.createSimpleDropdown();
   }
   
   private setupEventListeners(): void {
@@ -35,6 +34,22 @@ export class FlashCard extends Card {
         this.dropdown.value = this.firmwareService.getSelectedFirmwareId();
       }
     });
+  }
+  private async createSimpleDropdown(){
+    await this.firmwareService.init();
+    this.cardContent = this.element.querySelector('.card-content') as HTMLDivElement;
+
+    this.dropdown = document.createElement('select');
+    this.dropdown.className = 'firmware-selector';
+    const firmwareOptions = this.firmwareService.getIndexDBFirmwares()
+    console.log(firmwareOptions)
+    Object.entries(firmwareOptions).forEach(([id, option]) => {
+        const optionElement = document.createElement('option');
+        optionElement.value = id;
+        optionElement.textContent = option;
+        this.dropdown.appendChild(optionElement);
+      });
+    this.cardContent.appendChild(this.dropdown)
   }
 
   private createFirmwareDropdown(): void {

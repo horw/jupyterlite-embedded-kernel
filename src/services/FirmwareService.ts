@@ -5,14 +5,76 @@ export class FirmwareService {
   private firmwareString: string | null = null;
   private firmwareBlob: Blob | null = null;
   private selectedFirmwareId: string = 'Auto';
+  private indexDBFirmware: string[] = [];
   
-  constructor(private deviceService: DeviceService) {
+ constructor(private deviceService: DeviceService) {
     const savedSelection = localStorage.getItem('selectedFirmwareId');
-    if (savedSelection) {
-      this.selectedFirmwareId = savedSelection;
-    } else {
-      this.selectedFirmwareId = 'auto';
+    this.selectedFirmwareId = savedSelection || 'auto';
+  }
+
+  public getIndexDBFirmwares(): string[] {
+   return this.indexDBFirmware
+  }
+
+  public async init() {
+    try {
+      this.indexDBFirmware = await this.loadFirmwareFromIndexedDB();
+      console.log(this.indexDBFirmware);
+    } catch (error) {
+      console.error("Initialization failed:", error);
     }
+  }
+
+  private loadFirmwareFromIndexedDB(): Promise<string[]> {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open("JupyterLite Storage");
+
+      request.onsuccess = () => {
+        const db = request.result;
+        const tx = db.transaction("files", "readonly");
+        const store = tx.objectStore("files");
+        const keysRequest = store.getAllKeys();
+
+        keysRequest.onsuccess = () => {
+          const allKeys = keysRequest.result;
+          const binaries = allKeys.filter((key): key is string =>
+            typeof key === "string" && key.startsWith("binaries/") && key.endsWith('.bin')
+          );
+          resolve(binaries);
+        };
+
+        keysRequest.onerror = () => reject("Failed to get keys from IndexedDB");
+      };
+
+      request.onerror = () => reject("Failed to open IndexedDB");
+    });
+  }
+
+  public getFirmwareBlob(filePath: string): Promise<Blob> {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open("JupyterLite Storage");
+
+      request.onsuccess = () => {
+        const db = request.result;
+        const tx = db.transaction("files", "readonly");
+        const store = tx.objectStore("files");
+        const fileRequest = store.get(filePath);
+
+        fileRequest.onsuccess = () => {
+          const fileEntry = fileRequest.result;
+          if (fileEntry?.content) {
+            const blob = new Blob([fileEntry.content], { type: "application/octet-stream" });
+            resolve(blob);
+          } else {
+            reject("File not found or empty");
+          }
+        };
+
+        fileRequest.onerror = () => reject("Failed to get file from IndexedDB");
+      };
+
+      request.onerror = () => reject("Failed to open IndexedDB");
+    });
   }
 
   getFirmwareOptions(){
