@@ -51,7 +51,7 @@ PyPI = ""
 dev = [
     "build",
     "hatch",
-    "jupyterlab >=4.3.3,<4.4.0a0",
+    "jupyterlab >=4.4.2,<5.0.0",
 ]
 
 lint = [
