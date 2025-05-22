@@ -33,6 +33,10 @@ export class FirmwareService {
     }
   }
 
+  getFlashAddress(): number{
+    return firmwareOptions[this.getSelectedFirmwareId()].flash_address
+  }
+
   async downloadFirmware(): Promise<string> {
     const savedFirmwareId = localStorage.getItem('selectedFirmwareId');
     if (savedFirmwareId) {

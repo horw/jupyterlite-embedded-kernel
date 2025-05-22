@@ -88,7 +88,7 @@ export class FlashService {
       const flashOptions = {
         fileArray: [{
           data: firmwareString,
-          address: 0x0
+          address: this.firmwareService.getFlashAddress()
         }],
         flashSize: "keep",
         eraseAll: false,
