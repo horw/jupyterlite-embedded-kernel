@@ -1,7 +1,6 @@
 import { JupyterLiteServer, JupyterLiteServerPlugin } from '@jupyterlite/server';
 import { IKernel, IKernelSpecs } from '@jupyterlite/kernel';
 import { EmbeddedKernel } from './kernel';
-import WelcomePanel from './panel';
 import { ServiceContainer } from './services/ServiceContainer';
 import {addButtonToToolbarElement} from "./components/Toolbar";
 
@@ -42,13 +41,10 @@ const kernelPlugin: JupyterLiteServerPlugin<void> = {
         const toolbar = el?.querySelector('.jp-NotebookPanel-toolbar');
 
         const serviceContainer = new ServiceContainer();
-        const welcomePanel = new WelcomePanel(serviceContainer);
-        document.body.appendChild(welcomePanel.getElement());
         if (toolbar){
-          addButtonToToolbarElement(toolbar, welcomePanel);
+          addButtonToToolbarElement(toolbar, serviceContainer);
         }
         const kernel = new EmbeddedKernel(options, serviceContainer);
-        welcomePanel.show();
         await kernel.ready;
 
         activeKernels.set(kernel.id, kernel);
