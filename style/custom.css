@@ -145,6 +145,11 @@
   opacity: 1;
 }
 
+.firmware-content {
+  flex: 1;
+  min-height: 150px;
+}
+
 .firmware-section {
   width: 100%;
   margin-top: 0.75rem;
@@ -288,9 +293,10 @@
 
 /* Add extra padding to the flash card */
 [data-action="flash"] .card-content {
-  padding-bottom: 0.5rem;
-  flex-direction: column;
+  padding: 1rem;
   align-items: flex-start;
+  background-color: var(--ui-white);
+  border-radius: 8px;
 }
 
 /* Flash card header section that contains icon, title and description */
@@ -298,6 +304,9 @@
   display: flex;
   align-items: center;
   width: 100%;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--ui-gray-light);
 }
 
 .welcome-title {
@@ -426,14 +435,15 @@
   transform: translateY(12px);
   animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   background: var(--ui-white) !important;
-  border: 1.5px solid var(--ui-gray-light) !important;
-  border-radius: 16px !important;
-  padding: 1.25rem !important;
+  border: 1px solid var(--ui-gray-light) !important;
+  border-radius: 8px !important;
+  padding: 1rem !important;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: all 0.2s ease !important;
   margin-bottom: 0.75rem;
   position: relative;
   overflow: hidden;
+  box-shadow: var(--ui-shadow-sm);
 }
 
 .welcome-card::before {
@@ -468,7 +478,6 @@
 .card-content {
   position: relative;
   z-index: 1;
-  display: flex;
   align-items: center;
 }
 
@@ -670,4 +679,168 @@
   right: 80px;
   z-index: 1001;
   box-shadow: var(--ui-shadow-sm);
+}
+
+.tab-container {
+  display: flex;
+  border-bottom: none;
+}
+
+.card-body{
+  background-color: linen;
+  border-radius: 6px;
+}
+
+.tab {
+  padding: 10px 12px;
+  cursor: pointer;
+  border-radius: 6px;
+  border: 1px solid var(--ui-gray-light);
+  transition: all 0.2s ease;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.tab.active {
+  background: rgba(10, 25, 47, 0.05);
+  border: 1px solid var(--ui-navy-light);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.panel {
+  padding: 12px 8px;
+  display: none;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.file-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  background: var(--ui-navy-light);
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.file-display {
+  margin-top: 8px;
+  font-size: 0.85em;
+  padding: 6px 8px;
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.02);
+  color: var(--ui-gray);
+}
+
+.tab-content-info {
+  display: flex;
+  flex-direction: column;
+  margin-left: 8px;
+}
+
+.tab-title {
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: var(--ui-navy);
+}
+
+.tab-description {
+  font-size: 0.8em;
+  color: var(--ui-gray);
+  margin-top: 2px;
+}
+
+.panel-description {
+  margin-bottom: 12px;
+  color: var(--ui-gray);
+  font-size: 0.9em;
+}
+
+.panel-description p {
+  margin: 0 0 4px 0;
+  font-size: 0.9em;
+  line-height: 1.4;
+}
+
+.select-container {
+  margin-bottom: 12px;
+}
+
+.select-container label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.9em;
+  color: var(--ui-navy);
+}
+
+select {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--ui-gray-light);
+  border-radius: 4px;
+  background-color: white;
+  font-size: 0.9em;
+}
+
+.auto-detect-info {
+  display: flex;
+  align-items: flex-start;
+  font-size: 0.85em;
+  color: var(--ui-gray);
+  margin-top: 8px;
+  padding: 8px;
+  background-color: rgba(0, 0, 0, 0.03);
+  border-radius: 4px;
+}
+
+.info-icon {
+  margin-right: 10px;
+}
+
+.upload-container {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.upload-icon {
+  margin-right: 5px;
+}
+
+.tab-icon {
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.file-hint {
+  font-size: 0.8em;
+  color: var(--ui-gray);
+  margin-top: 6px;
+  font-style: italic;
+}
+
+.file-selected {
+  background: rgba(10, 25, 47, 0.05);
+  border-left: 3px solid var(--ui-navy-light);
+}
+
+.file-selected-icon {
+  color: #28a745;
+  margin-right: 8px;
+}
+
+.file-selected-name {
+  font-weight: 500;
+}
+
+.file-selected-size {
+  color: #6c757d;
+  margin-left: 5px;
 }
