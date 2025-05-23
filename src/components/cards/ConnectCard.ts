@@ -1,5 +1,5 @@
 import { Card } from './Card';
-import { DeviceService } from '../services/DeviceService';
+import { DeviceService } from '../../services/DeviceService';
 
 export class ConnectCard extends Card {
   private deviceService: DeviceService;

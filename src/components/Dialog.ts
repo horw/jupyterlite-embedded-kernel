@@ -1,6 +1,6 @@
-import { Card } from './Card';
-import { FlashCard } from './FlashCard';
-import { ConnectCard } from './ConnectCard';
+import { Card } from './cards/Card';
+import { FlashCard } from './cards/FlashCard';
+import { ConnectCard } from './cards/ConnectCard';
 import { ServiceContainer } from '../services/ServiceContainer';
 
 export interface DialogProps {

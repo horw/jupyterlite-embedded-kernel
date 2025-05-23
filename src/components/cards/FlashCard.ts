@@ -1,6 +1,6 @@
 import { Card, CardProps } from './Card';
-import { FirmwareService } from '../services/FirmwareService';
-import { DeviceService } from '../services/DeviceService';
+import { FirmwareService } from '../../services/FirmwareService';
+import { DeviceService } from '../../services/DeviceService';
 
 export class FlashCard extends Card {
   // Core elements
