@@ -1,4 +1,7 @@
 import {ServiceContainer} from "../services/ServiceContainer";
+import {ConnectDeviceUI} from "./dropItem/connectDevice";
+import {FlashDeviceUI} from "./dropItem/flashDevice";
+import {ResetDeviceUI} from "./dropItem/resetDevice";
 
 export function addButtonToToolbarElement(toolbar: Element, serviceContainer: ServiceContainer ): void {
   const div = document.createElement('div');
@@ -66,12 +69,9 @@ export function addButtonToToolbarElement(toolbar: Element, serviceContainer: Se
   dropdownContent.style.overflow = 'auto';
   
   const items = [
-    { text: 'Flash connect', action: () => {
-      console.log('Flash connect selected');
-    }},
-    { text: 'Reset', action: () => {
-      console.log('Reset selected');
-    }}
+    new ConnectDeviceUI(serviceContainer.deviceService),
+    new FlashDeviceUI(serviceContainer.deviceService, serviceContainer.firmwareService),
+    new ResetDeviceUI(serviceContainer.deviceService),
   ];
   
   items.forEach((item, index) => {
@@ -91,29 +91,6 @@ export function addButtonToToolbarElement(toolbar: Element, serviceContainer: Se
     option.style.whiteSpace = 'nowrap';
     option.style.userSelect = 'none';
     option.style.transition = 'background-color 0.1s ease';
-    
-    // Add a keyboard shortcut container (Jupyter style often shows keyboard shortcuts)
-    if (index === 0) {
-      const shortcutContainer = document.createElement('div');
-      shortcutContainer.className = 'jp-Menu-itemShortcut';
-      shortcutContainer.textContent = 'F';
-      shortcutContainer.style.paddingLeft = '12px';
-      shortcutContainer.style.textAlign = 'right';
-      shortcutContainer.style.flexGrow = '1';
-      shortcutContainer.style.color = 'var(--jp-ui-font-color2, rgba(0,0,0,.54))';
-      shortcutContainer.style.fontSize = '12px';
-      option.appendChild(shortcutContainer);
-    } else if (index === 1) {
-      const shortcutContainer = document.createElement('div');
-      shortcutContainer.className = 'jp-Menu-itemShortcut';
-      shortcutContainer.textContent = 'R';
-      shortcutContainer.style.paddingLeft = '12px';
-      shortcutContainer.style.textAlign = 'right';
-      shortcutContainer.style.flexGrow = '1';
-      shortcutContainer.style.color = 'var(--jp-ui-font-color2, rgba(0,0,0,.54))';
-      shortcutContainer.style.fontSize = '12px';
-      option.appendChild(shortcutContainer);
-    }
     
     option.addEventListener('mouseover', () => {
       option.style.backgroundColor = 'var(--jp-layout-color2, #EEEEEE)';
