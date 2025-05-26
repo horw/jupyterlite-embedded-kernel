@@ -205,58 +205,6 @@ export class FlashDeviceUI {
         defaultOption.appendChild(firmwareSelectContainer);
         defaultOption.appendChild(defaultButton);
         
-        // Custom Binary Option
-        const customOption = document.createElement('div');
-        customOption.className = 'panel';
-        customOption.style.border = '1px solid var(--jp-border-color1, #E0E0E0)';
-        customOption.style.borderRadius = '4px';
-        customOption.style.padding = '16px';
-        customOption.style.cursor = 'pointer';
-        customOption.style.transition = 'background-color 0.2s ease, border-color 0.2s ease';
-        
-        const customTitle = document.createElement('h3');
-        customTitle.textContent = 'Custom Binary';
-        customTitle.style.margin = '0 0 8px 0';
-        customTitle.style.fontSize = '15px';
-        customTitle.style.color = 'var(--jp-ui-font-color0, #212121)';
-        
-        const customDesc = document.createElement('p');
-        customDesc.textContent = 'Upload and flash your own binary file';
-        customDesc.style.margin = '0';
-        customDesc.style.color = 'var(--jp-ui-font-color2, #757575)';
-        customDesc.style.fontSize = '13px';
-        
-        const fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.accept = '.bin';
-        fileInput.style.marginTop = '12px';
-        fileInput.style.width = '100%';
-        
-        const customButton = document.createElement('button');
-        customButton.textContent = 'Upload & Flash';
-        customButton.className = 'jp-panel-button';
-        customButton.style.marginTop = '12px';
-        customButton.style.padding = '8px 16px';
-        customButton.style.backgroundColor = 'var(--jp-brand-color1, #2196F3)';
-        customButton.style.color = 'white';
-        customButton.style.border = 'none';
-        customButton.style.borderRadius = '4px';
-        customButton.style.cursor = 'pointer';
-        customButton.style.fontSize = '13px';
-        customButton.onclick = () => {
-            if (fileInput.files && fileInput.files.length > 0) {
-                this.flashCustomBinary(fileInput.files[0]);
-                this.hideDialogPanel();
-            } else {
-                alert('Please select a binary file first');
-            }
-        };
-        
-        customOption.appendChild(customTitle);
-        customOption.appendChild(customDesc);
-        customOption.appendChild(fileInput);
-        customOption.appendChild(customButton);
-        
         // Add hover effects
         const addHoverEffects = (element: HTMLElement) => {
             element.addEventListener('mouseenter', () => {
@@ -270,12 +218,10 @@ export class FlashDeviceUI {
         };
         
         addHoverEffects(defaultOption);
-        addHoverEffects(customOption);
-        
+
         // Add options to container
         optionsContainer.appendChild(defaultOption);
-        optionsContainer.appendChild(customOption);
-        
+
         // Assemble dialog
         dialog.appendChild(header);
         dialog.appendChild(description);
@@ -315,9 +261,5 @@ export class FlashDeviceUI {
     private flashDefaultFirmware(firmwareId: string) {
         this.firmwareService.setSelectedFirmwareId(firmwareId);
         this.flashService.flashDevice();
-    }
-
-    private flashCustomBinary(file: File) {
-        console.log('Flashing custom binary:', file.name);
     }
 }
