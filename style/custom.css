@@ -1,18 +1,3 @@
-/* THEME VARIABLES */
-:root {
-  --ui-red: #FF3B30;
-  --ui-red-dark: #E0321F;
-  --ui-red-light: #FF6961;
-  --ui-navy: #0A192F;
-  --ui-navy-light: #2D2D3A;
-  --ui-white: #FFFFFF;
-  --ui-gray: #8E8E93;
-  --ui-gray-light: #F2F2F7;
-  --ui-shadow-sm: 0 2px 8px rgba(28, 28, 40, 0.08);
-  --ui-shadow-md: 0 8px 24px rgba(28, 28, 40, 0.12);
-  --ui-shadow-lg: 0 20px 40px rgba(28, 28, 40, 0.16);
-}
-
 /* ANIMATIONS */
 /* Defines all animation keyframes used throughout the application */
 @keyframes float {

@@ -1,5 +1,6 @@
 import {DeviceService} from "../../services/DeviceService";
 import {FirmwareService} from "../../services/FirmwareService";
+import {FlashService} from "../../services/FlashService";
 
 export class FlashDeviceUI {
     public text: string = "Flash Device";
@@ -7,16 +8,14 @@ export class FlashDeviceUI {
     
     constructor(
         private deviceService: DeviceService,
-        private firmwareService: FirmwareService
+        private firmwareService: FirmwareService,
+        private flashService: FlashService
     ) {}
 
     public action() {
-        // Create dialog panel if it doesn't exist yet
         if (!this.dialogElement) {
             this.createDialogPanel();
         }
-        
-        // Show the dialog
         this.showDialogPanel();
     }
     
@@ -302,7 +301,6 @@ export class FlashDeviceUI {
     private showDialogPanel() {
         if (this.dialogElement) {
             this.dialogElement.style.display = 'block';
-            // Log device and firmware info for debugging
             console.log('Device type:', this.deviceService.getDeviceType());
             console.log('Firmware options:', this.firmwareService.getFirmwareOptions());
         }
@@ -315,30 +313,11 @@ export class FlashDeviceUI {
     }
     
     private flashDefaultFirmware(firmwareId: string) {
-        // Implement default firmware flashing logic
-        console.log('Flashing firmware:', firmwareId, 'for device:', this.deviceService.getDeviceType());
-        // Set the selected firmware ID in the firmware service
         this.firmwareService.setSelectedFirmwareId(firmwareId);
-        // Start the firmware download and flashing process
-        this.downloadAndFlashFirmware();
+        this.flashService.flashDevice();
     }
-    
-    private async downloadAndFlashFirmware() {
-        try {
-            console.log('Starting firmware download...');
-            // Call the firmware service to download the firmware
-            await this.firmwareService.downloadFirmware();
-            console.log('Firmware downloaded successfully, ready to flash');
-            // Add actual flashing implementation here
-        } catch (error) {
-            console.error('Error downloading firmware:', error);
-            alert('Failed to download firmware. Please try again.');
-        }
-    }
-    
+
     private flashCustomBinary(file: File) {
-        // Implement custom binary flashing logic
         console.log('Flashing custom binary:', file.name);
-        // Add actual implementation here
     }
 }

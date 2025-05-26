@@ -70,7 +70,7 @@ export function addButtonToToolbarElement(toolbar: Element, serviceContainer: Se
   
   const items = [
     new ConnectDeviceUI(serviceContainer.deviceService),
-    new FlashDeviceUI(serviceContainer.deviceService, serviceContainer.firmwareService),
+    new FlashDeviceUI(serviceContainer.deviceService, serviceContainer.firmwareService, serviceContainer.flashService),
     new ResetDeviceUI(serviceContainer.deviceService),
   ];
   
