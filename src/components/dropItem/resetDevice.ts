@@ -9,6 +9,7 @@ export class ResetDeviceUI{
 
     public action(){
         this.deviceService.reset()
+        alert("Device was reset")
     }
 
 }
