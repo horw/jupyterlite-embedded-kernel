@@ -47,6 +47,8 @@ export class FlashDeviceUI {
         dialog.style.maxWidth = '500px';
         dialog.style.width = '90%';
         dialog.style.zIndex = '10001';
+        dialog.style.maxHeight = '80vh';
+        dialog.style.overflowY = 'auto';
         
         // Create header
         const header = document.createElement('div');
@@ -109,14 +111,82 @@ export class FlashDeviceUI {
         
         const defaultDesc = document.createElement('p');
         defaultDesc.textContent = 'Use the recommended firmware for your device';
-        defaultDesc.style.margin = '0';
+        defaultDesc.style.margin = '0 0 16px 0';
         defaultDesc.style.color = 'var(--jp-ui-font-color2, #757575)';
         defaultDesc.style.fontSize = '13px';
         
+        // Get firmware options and create selection UI
+        const firmwareOptions = this.firmwareService.getFirmwareOptions();
+        const firmwareKeys = Object.keys(firmwareOptions);
+        
+        // Create firmware selection container
+        const firmwareSelectContainer = document.createElement('div');
+        firmwareSelectContainer.style.marginBottom = '16px';
+        
+        const selectLabel = document.createElement('label');
+        selectLabel.textContent = 'Select firmware:';
+        selectLabel.style.display = 'block';
+        selectLabel.style.marginBottom = '8px';
+        selectLabel.style.fontSize = '13px';
+        selectLabel.style.color = 'var(--jp-ui-font-color1, #424242)';
+        
+        const firmwareSelect = document.createElement('select');
+        firmwareSelect.style.width = '100%';
+        firmwareSelect.style.padding = '8px';
+        firmwareSelect.style.borderRadius = '4px';
+        firmwareSelect.style.border = '1px solid var(--jp-border-color1, #E0E0E0)';
+        firmwareSelect.style.backgroundColor = 'var(--jp-layout-color1, white)';
+        firmwareSelect.style.color = 'var(--jp-ui-font-color0, #212121)';
+        firmwareSelect.style.fontSize = '13px';
+        
+        // Add firmware options to select dropdown
+        firmwareKeys.forEach(key => {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = firmwareOptions[key].name || key;
+            
+            // Set auto as default if available, otherwise first option
+            if (key === 'auto') {
+                option.selected = true;
+            }
+            
+            firmwareSelect.appendChild(option);
+        });
+        
+        // Add firmware description element that updates when selection changes
+        const firmwareDescription = document.createElement('div');
+        firmwareDescription.style.marginTop = '8px';
+        firmwareDescription.style.fontSize = '12px';
+        firmwareDescription.style.color = 'var(--jp-ui-font-color2, #757575)';
+        firmwareDescription.style.fontStyle = 'italic';
+        
+        // Function to update description based on selection
+        const updateFirmwareDescription = () => {
+            const selectedKey = firmwareSelect.value;
+            const selectedOption = firmwareOptions[selectedKey];
+            
+            if (selectedKey === 'auto') {
+                firmwareDescription.textContent = 'Automatically detects your device type and selects the appropriate firmware';
+            } else if (selectedOption) {
+                firmwareDescription.textContent = `Firmware for ${selectedOption.name || selectedKey}`;
+            } else {
+                firmwareDescription.textContent = `Firmware for ${selectedKey}`;
+            }
+        };
+        
+        // Set initial description
+        updateFirmwareDescription();
+        
+        // Update description when selection changes
+        firmwareSelect.addEventListener('change', updateFirmwareDescription);
+        
+        firmwareSelectContainer.appendChild(selectLabel);
+        firmwareSelectContainer.appendChild(firmwareSelect);
+        firmwareSelectContainer.appendChild(firmwareDescription);
+        
         const defaultButton = document.createElement('button');
-        defaultButton.textContent = 'Flash Default';
+        defaultButton.textContent = 'Flash Selected Firmware';
         defaultButton.className = 'jp-panel-button';
-        defaultButton.style.marginTop = '12px';
         defaultButton.style.padding = '8px 16px';
         defaultButton.style.backgroundColor = 'var(--jp-brand-color1, #2196F3)';
         defaultButton.style.color = 'white';
@@ -124,13 +194,16 @@ export class FlashDeviceUI {
         defaultButton.style.borderRadius = '4px';
         defaultButton.style.cursor = 'pointer';
         defaultButton.style.fontSize = '13px';
+        defaultButton.style.width = '100%';
         defaultButton.onclick = () => {
-            this.flashDefaultFirmware();
+            const selectedFirmwareId = firmwareSelect.value;
+            this.flashDefaultFirmware(selectedFirmwareId);
             this.hideDialogPanel();
         };
         
         defaultOption.appendChild(defaultTitle);
         defaultOption.appendChild(defaultDesc);
+        defaultOption.appendChild(firmwareSelectContainer);
         defaultOption.appendChild(defaultButton);
         
         // Custom Binary Option
@@ -241,10 +314,26 @@ export class FlashDeviceUI {
         }
     }
     
-    private flashDefaultFirmware() {
+    private flashDefaultFirmware(firmwareId: string) {
         // Implement default firmware flashing logic
-        console.log('Flashing default firmware for device:', this.deviceService.getDeviceType());
-        // Add actual implementation here
+        console.log('Flashing firmware:', firmwareId, 'for device:', this.deviceService.getDeviceType());
+        // Set the selected firmware ID in the firmware service
+        this.firmwareService.setSelectedFirmwareId(firmwareId);
+        // Start the firmware download and flashing process
+        this.downloadAndFlashFirmware();
+    }
+    
+    private async downloadAndFlashFirmware() {
+        try {
+            console.log('Starting firmware download...');
+            // Call the firmware service to download the firmware
+            await this.firmwareService.downloadFirmware();
+            console.log('Firmware downloaded successfully, ready to flash');
+            // Add actual flashing implementation here
+        } catch (error) {
+            console.error('Error downloading firmware:', error);
+            alert('Failed to download firmware. Please try again.');
+        }
     }
     
     private flashCustomBinary(file: File) {
