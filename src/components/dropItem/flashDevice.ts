@@ -1,6 +1,7 @@
 import {DeviceService} from "../../services/DeviceService";
 import {FirmwareService} from "../../services/FirmwareService";
 import {FlashService} from "../../services/FlashService";
+import '/style/custom.css';
 
 export class FlashDeviceUI {
     public text: string = "Flash Device";
@@ -19,7 +20,7 @@ export class FlashDeviceUI {
         this.showDialogPanel();
     }
     
-    private createDialogPanel() {
+    public createDialogPanel() {
         // Create overlay
         const overlay = document.createElement('div');
         overlay.className = 'welcome-overlay';
@@ -244,7 +245,7 @@ export class FlashDeviceUI {
         });
     }
     
-    private showDialogPanel() {
+    public showDialogPanel() {
         if (this.dialogElement) {
             this.dialogElement.style.display = 'block';
             console.log('Device type:', this.deviceService.getDeviceType());

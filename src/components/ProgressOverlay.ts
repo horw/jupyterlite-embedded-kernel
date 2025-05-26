@@ -25,7 +25,6 @@ export class ProgressOverlay {
   show(firmwareId?: string): void {
     document.body.appendChild(this.element);
     
-    // Update title with firmware information if provided
     if (firmwareId) {
       this.setTitle(`Flashing ${firmwareId} Firmware...`);
     }
@@ -34,7 +33,6 @@ export class ProgressOverlay {
       this.element.classList.add('visible');
     });
     
-    // Dispatch flashStart event with firmware info
     const flashStartEvent = new CustomEvent('flashStart', {
       detail: { firmware: firmwareId || 'selected' }
     });
