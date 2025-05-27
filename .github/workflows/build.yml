@@ -35,7 +35,7 @@ jobs:
 
     - name: Install extension
       run: |
-        pip install "$(find dist -name '*.whl' | head -n 1)"
+        pip install --force-reinstall "$(find dist -name '*.whl' | head -n 1)"
 
     - name: Build JupyterLite site
       run: |
