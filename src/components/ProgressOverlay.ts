@@ -1,3 +1,5 @@
+import '/style/progress.css'
+
 export class ProgressOverlay {
   private element: HTMLElement;
   private progressBar: HTMLElement;

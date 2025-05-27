@@ -1,5 +1,3 @@
-/* PROGRESS OVERLAY */
-/* Styles for the progress indicator shown during operations like flashing */
 .progress-overlay {
   position: fixed;
   top: 0;
@@ -25,28 +23,26 @@
   padding: 24px;
   width: 400px;
   max-width: 90%;
-  box-shadow: var(--ui-shadow-lg);
 }
 
 .progress-title {
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 16px;
-  color: var(--ui-navy);
   display: flex;
   align-items: center;
 }
 
 /* Styling for firmware name in progress title */
 .progress-title .firmware-name {
-  color: var(--ui-red);
+  color: #fd4343;
   font-weight: 700;
   margin: 0 4px;
 }
 
 .progress-bar-container {
   height: 8px;
-  background: var(--ui-gray-light);
+  background: #f1f1f1;
   border-radius: 4px;
   overflow: hidden;
   margin-bottom: 12px;
@@ -54,13 +50,13 @@
 
 .progress-bar {
   height: 100%;
-  background: var(--ui-red);
+  background: #fd4343;
   width: 0%;
   transition: width 0.3s ease;
 }
 
 .progress-status {
   font-size: 14px;
-  color: var(--ui-gray);
+  color: #aaaaaa;
   margin-top: 8px;
 }
