@@ -33,3 +33,11 @@ jobs:
         path: dist/*
         if-no-files-found: error
 
+    - name: Build JupyterLite site
+      run: |
+        jupyter lite build --contents content --output-dir _output
+
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: ./_output
