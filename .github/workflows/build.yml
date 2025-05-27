@@ -33,6 +33,10 @@ jobs:
         path: dist/*
         if-no-files-found: error
 
+    - name: Install extension
+      run: |
+        pip install "$(find dist -name '*.whl' | head -n 1)"
+
     - name: Build JupyterLite site
       run: |
         jupyter lite build --output-dir _output
