@@ -24,9 +24,12 @@ export class DeviceService {
     if (!this.port) {
       await this.requestPort();
     }
-
     if (!this.port) {
       throw new Error('No port selected');
+    }
+
+    if (!this.transport) {
+      throw new Error('No transport selected');
     }
 
     try {
@@ -34,50 +37,45 @@ export class DeviceService {
         console.log('Already connected, skipping connection');
         return;
       }
-      
-      if (!this.port.readable && !this.port.writable) {
-        this.transport?.connect()
-      } else {
-        console.log('Port is already open, skipping connection');
-      }
-      
-      this.isDeviceConnected = true;
+      await this.transport.connect()
     } catch (err) {
       console.error('Failed to connect:', err);
       throw err;
     }
-    
+
+
+    this.isDeviceConnected = true;
     const event = new CustomEvent("deviceConnected", {
         detail: { msg: "Connected" }
     });
     document.dispatchEvent(event)
+
   }
 
   async disconnect(): Promise<void> {
-    if (this.port) {
-      try {
-        if ((this.port.readable && this.port.readable.locked) ||
-            (this.port.writable && this.port.writable.locked)) {
-          console.warn('Serial port has locked streams. Cannot close directly.');
-          this.isDeviceConnected = false;
-          return;
-        }
-        
-        await this.port.close();
-        console.log('Device disconnected successfully');
-      } catch (err) {
-        console.error('Failed to disconnect:', err);
-      } finally {
-        this.isDeviceConnected = false;
+
+    try {
+
+      if (this.transport){
+        await this.transport.disconnect()
       }
-    } else {
+      else if (this.port){
+        await this.port.close()
+      }
+      console.log('Device disconnected successfully');
+
+    } catch (err) {
+      console.error('Failed to disconnect:', err);
+    } finally {
+
       this.isDeviceConnected = false;
+      const event = new CustomEvent("deviceDisconnected", {
+        detail: { msg: "Not connected" }
+      });
+      document.dispatchEvent(event)
+
     }
 
-    const event = new CustomEvent("deviceDisconnected", {
-      detail: { msg: "Not connected" }
-    });
-    document.dispatchEvent(event)
   }
 
   async reset(): Promise<void> {

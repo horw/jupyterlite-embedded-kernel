@@ -1,5 +1,5 @@
 import {DeviceService} from "../../services/DeviceService";
-
+import {callAlert} from "../Alert";
 
 export class ConnectDeviceUI{
     public text: string = "Connect Device"
@@ -8,7 +8,14 @@ export class ConnectDeviceUI{
     }
 
     public action(){
-        console.log(this.deviceService)
+        if(this.deviceService.isConnected()){
+            callAlert(
+            `
+                Device already connected
+                if you want to recconect to another device please open new notebook, or reload page
+            `
+            )
+        }
         this.deviceService.connect()
     }
 

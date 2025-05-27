@@ -17,6 +17,7 @@ export class FlashService {
   async flashDevice(): Promise<void> {
     const progressOverlay = new ProgressOverlay();
     try {
+      await this.deviceService.disconnect()
       if (!this.deviceService.getTransport()){
         this.deviceService.clearPort();
         await this.deviceService.requestPort();
@@ -134,7 +135,7 @@ export class FlashService {
 
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      await transport.disconnect();
+      await this.deviceService.disconnect();
       try {
         progressOverlay.setStatus('Cleaning up connections...');
       } catch (disconnectError) {
@@ -142,11 +143,10 @@ export class FlashService {
       }
 
       console.warn('Reconnect...');
-      await transport.connect()
+      await this.deviceService.connect();
       await this.deviceService.reset();
-
       console.warn('Device reset...');
-      
+      console.log("This device type is: ", this.deviceService.getDeviceType())
       const deviceType = this.deviceService.getDeviceType();
       if (deviceType) {
         const deviceConnectedEvent = new CustomEvent('deviceConnected', {

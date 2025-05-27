@@ -1,4 +1,5 @@
 import {DeviceService} from "../../services/DeviceService";
+import {callAlert} from "../Alert";
 
 
 export class ResetDeviceUI{
@@ -9,7 +10,7 @@ export class ResetDeviceUI{
 
     public action(){
         this.deviceService.reset()
-        alert("Device was reset")
+        callAlert("Device was reset")
     }
 
 }
