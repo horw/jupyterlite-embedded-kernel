@@ -20,7 +20,7 @@ export class DeviceIndicator {
       this.element.innerHTML = `
         <div class="device-status connected" title="Device Connected">
           <div class="status-dot"></div>
-          <span>Device Connected</span>
+          <span>Device Connected ${this.deviceService.getDeviceType()}</span>
         </div>
       `;
     } else {

@@ -1,4 +1,4 @@
-import { firmwareOptions } from '../constants'
+import { firmwareOptions, findFirmwareKeyByName } from '../constants'
 import { DeviceService } from './DeviceService';
 
 export class FirmwareService {
@@ -48,23 +48,8 @@ export class FirmwareService {
   
   private async downloadAutoDetectedFirmware(): Promise<string> {
     const deviceType = this.deviceService.getDeviceType();
-    let firmwareId: string;
-    
-    if (!deviceType) {
-      console.warn('No device detected for auto firmware detection. Using generic ESP32 firmware.');
-      firmwareId = 'esp32';
-    } else if (deviceType.includes('C6')) {
-      console.log('Auto-detected ESP32-C6, using corresponding firmware');
-      firmwareId = 'esp32-c6';
-    } else if (deviceType.includes('C3')) {
-      console.log('Auto-detected ESP32-C3, using corresponding firmware');
-      firmwareId = 'esp32-c3';
-    } else {
-      console.log('Auto-detected generic ESP32, using corresponding firmware');
-      firmwareId = 'esp32';
-    }
-    
-    return this.downloadSpecificFirmware(firmwareId);
+    const res = findFirmwareKeyByName(deviceType);
+    return this.downloadSpecificFirmware(res);
   }
   
   private async downloadSpecificFirmware(firmwareId: string): Promise<string> {

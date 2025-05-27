@@ -19,8 +19,8 @@ export class ConsoleService {
     
     let buffer = '';
     let outputStarted = false;
-    let timeout = 10000;
-    const startTime = Date.now();
+    // let timeout = 10000;
+    // const startTime = Date.now();
 
     try {
       const transport = this.deviceService.getTransport();
@@ -72,13 +72,14 @@ export class ConsoleService {
           }
         }
 
-        if (Date.now() - startTime > timeout) {
-          logger('Timeout reached');
-          return { 
-            success: false, 
-            error: 'Command execution timed out' 
-          };
-        }
+        // TODO: Need understand how to use timeout correctly
+        // if (Date.now() - startTime > timeout) {
+        //   logger('Timeout reached');
+        //   return {
+        //     success: false,
+        //     error: 'Command execution timed out'
+        //   };
+        // }
 
         await new Promise(resolve => setTimeout(resolve, 20));
       }
