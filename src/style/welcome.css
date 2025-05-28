@@ -9,18 +9,19 @@
     justify-content: center;
     align-items: center;
     z-index: 10000;
+    box-sizing: border-box;
 }
 
 .jp-welcome-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
     background-color: var(--jp-layout-color1, white);
-    border-radius: 2px;
     box-shadow: var(--jp-elevation-z20, 0 2px 12px 0 rgba(0, 0, 0, 0.2));
-    width: 100%;
-    max-width: 560px;
-    max-height: 90vh;
     overflow-y: auto;
-    border-top: 3px solid var(--jp-brand-color1, #2196F3);
-    display: flex;
+    border-top: 2px solid var(--jp-brand-color1, #2196F3);
     flex-direction: column;
 }
 
@@ -119,7 +120,6 @@
     background-color: var(--jp-brand-color0, #1976D2);
 }
 
-/* Inline button styling */
 .jp-welcome-inline-button {
     display: inline-flex;
     vertical-align: middle;
