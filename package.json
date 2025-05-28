@@ -28,7 +28,7 @@
   ],
   "scripts": {
     "serve": "cd _output && python -m http.server",
-    "build:l": "rm -rf _output & jupyter lite build",
+    "build:static": "rm -rf _output & jupyter lite build",
     "build": "jlpm build:lib && jlpm build:labextension:dev",
     "build:prod": "jlpm build:lib && jlpm build:labextension",
     "build:labextension": "jupyter labextension build .",

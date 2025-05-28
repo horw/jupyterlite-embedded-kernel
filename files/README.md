@@ -1,8 +1,7 @@
-You can put in this folder static files and when you did
-```
-jupyter lite build 
-```
-Files from this directory will be moved to files ...
+You can place static files in this folder. When you run:
 
+```bash
+jupyter lite build
+```
 
-JupyterLite supports IndexedDB for sharing files; we can use Chrome blob files to share them.
+the files from this directory will be moved to the `files` directory in the JupyterLite build output.
