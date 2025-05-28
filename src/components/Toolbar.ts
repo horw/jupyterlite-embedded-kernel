@@ -4,7 +4,7 @@ import {FlashDeviceUI} from "./dropItem/flashDevice";
 import {ResetDeviceUI} from "./dropItem/resetDevice";
 import {DeviceIndicator} from "./DeviceIndicator";
 
-import "/style/toolbar.css";
+import "/src/style/toolbar.css";
 
 export const EspControlPanelButton = `
     <button class="jp-ToolbarButton jp-Toolbar-item esp-button" title="ESP Options">

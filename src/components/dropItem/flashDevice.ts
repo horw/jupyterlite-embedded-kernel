@@ -1,7 +1,7 @@
 import {DeviceService} from "../../services/DeviceService";
 import {FirmwareService} from "../../services/FirmwareService";
 import {FlashService} from "../../services/FlashService";
-import '/style/flash.css'
+import '/src/style/flash.css'
 
 
 export class FlashDeviceUI {

@@ -1,4 +1,5 @@
 import {EspControlPanelButton} from "./Toolbar";
+import '/src/style/welcome.css'
 
 export class Welcome {
     private static readonly STORAGE_KEY = 'welcome-hide-preference';
@@ -19,7 +20,6 @@ export class Welcome {
      * Creates and displays the welcome message if it hasn't been dismissed
      */
     public showWelcome() {
-        // If user chose not to see the welcome message, don't show it
         if (!this.shouldShowWelcome()) {
             return;
         }
@@ -43,7 +43,6 @@ export class Welcome {
         overlay.className = 'jp-welcome-overlay';
         overlay.style.display = 'none';
         
-        // Set welcome content
         overlay.innerHTML = `
             <div class="jp-welcome-dialog">
                 <header class="jp-welcome-header">
@@ -62,7 +61,7 @@ export class Welcome {
                         <li>Flash firmware to your device with the Flash Device tool</li>
                         <li>Create new notebooks to write and execute code</li>
                         <li>Use the device's capabilities directly from your notebooks</li>
-                        <li>If you found some issue or way to improve, please open it in  <a href="https://github.com/espressif/jupyter-lite-micropython/issues"> GitHub</a></li>
+                        <li>Found a bug or have a suggestion? Please <a href="https://github.com/espressif/jupyter-lite-micropython/issues" class="jp-welcome-github-link" target="_blank" >open an issue on GitHub</a></li>
                     </ul>
                     <div class="jp-welcome-checkbox-container">
                         <label class="jp-welcome-checkbox-label">
@@ -80,7 +79,6 @@ export class Welcome {
         document.body.appendChild(overlay);
         this.welcomeElement = overlay;
         
-        // Add event listeners
         const closeButton = overlay.querySelector('#welcome-dialog-close');
         const gotItButton = overlay.querySelector('#welcome-got-it-button');
         const checkbox = overlay.querySelector('#welcome-hide-checkbox') as HTMLInputElement;
@@ -100,8 +98,6 @@ export class Welcome {
             }
         });
         
-        // Add CSS styles
-        this.addStyles();
     }
     
     /**
@@ -126,162 +122,5 @@ export class Welcome {
             }
         }
     }
-    
-    /**
-     * Adds CSS styles for the welcome component
-     */
-    private addStyles() {
-        const styleId = 'jp-welcome-styles';
-        
-        // Check if styles already exist
-        if (!document.getElementById(styleId)) {
-            const style = document.createElement('style');
-            style.id = styleId;
-            style.textContent = `
-                .jp-welcome-overlay {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background-color: var(--jp-modal-background, rgba(0, 0, 0, 0.6));
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    z-index: 10000;
-                }
-                
-                .jp-welcome-dialog {
-                    background-color: var(--jp-layout-color1, white);
-                    border-radius: 2px;
-                    box-shadow: var(--jp-elevation-z20, 0 2px 12px 0 rgba(0, 0, 0, 0.2));
-                    width: 100%;
-                    max-width: 560px;
-                    max-height: 90vh;
-                    overflow-y: auto;
-                    border-top: 3px solid var(--jp-brand-color1, #2196F3);
-                    display: flex;
-                    flex-direction: column;
-                }
-                
-                .jp-welcome-header {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    padding: 12px 16px;
-                    background-color: var(--jp-layout-color1, white);
-                    border-bottom: 1px solid var(--jp-border-color1, #E0E0E0);
-                }
-                
-                .jp-welcome-title {
-                    margin: 0;
-                    color: var(--jp-ui-font-color0, #000);
-                    font-size: var(--jp-ui-font-size2, 1.2em);
-                    font-weight: 600;
-                    font-family: var(--jp-ui-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif);
-                }
-                
-                .jp-welcome-close-button {
-                    background: none;
-                    border: none;
-                    cursor: pointer;
-                    padding: 4px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    border-radius: 2px;
-                }
-                
-                .jp-welcome-close-button:hover {
-                    background-color: var(--jp-layout-color2, #EEEEEE);
-                }
-                
-                .jp-welcome-content {
-                    padding: 16px;
-                    font-family: var(--jp-ui-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif);
-                    font-size: var(--jp-ui-font-size1, 13px);
-                    color: var(--jp-ui-font-color1, rgba(0,0,0,.87));
-                    line-height: 1.5;
-                }
-                
-                .jp-welcome-content p {
-                    margin-top: 0;
-                    margin-bottom: 12px;
-                }
-                
-                .jp-welcome-content ul {
-                    padding-left: 24px;
-                    margin: 12px 0;
-                }
-                
-                .jp-welcome-content li {
-                    margin-bottom: 8px;
-                }
-                
-                .jp-welcome-checkbox-container {
-                    margin-top: 20px;
-                }
-                
-                .jp-welcome-checkbox-label {
-                    display: flex;
-                    align-items: center;
-                    cursor: pointer;
-                    font-size: var(--jp-ui-font-size1, 13px);
-                    color: var(--jp-ui-font-color2, #616161);
-                }
-                
-                .jp-welcome-checkbox {
-                    margin-right: 8px;
-                }
-                
-                .jp-welcome-button-container {
-                    display: flex;
-                    justify-content: flex-end;
-                    margin-top: 20px;
-                    padding-top: 12px;
-                    border-top: 1px solid var(--jp-border-color1, #E0E0E0);
-                }
-                
-                .jp-Button.jp-mod-accept.jp-mod-styled {
-                    background-color: var(--jp-brand-color1, #2196F3);
-                    color: white;
-                    border: none;
-                    border-radius: 2px;
-                    padding: 6px 16px;
-                    cursor: pointer;
-                    font-weight: 500;
-                    font-family: var(--jp-ui-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif);
-                    font-size: var(--jp-ui-font-size1, 13px);
-                    transition: background-color 0.1s ease;
-                }
-                
-                .jp-Button.jp-mod-accept.jp-mod-styled:hover {
-                    background-color: var(--jp-brand-color0, #1976D2);
-                }
-                
-                /* Inline button styling */
-                .jp-welcome-inline-button {
-                    display: inline-flex;
-                    vertical-align: middle;
-                }
-                
-                .jp-welcome-inline-button .jp-ToolbarButton {
-                    font-size: inherit;
-                    height: auto;
-                    transform-origin: left center;
-                    display: inline-flex;
-                    border: 1px solid var(--jp-border-color1);
-                    background-color: var(--jp-layout-color1);
-                    box-shadow: var(--jp-elevation-z1);
-                    white-space: nowrap;
-                }
-                
-                .jp-welcome-inline-button .jp-ToolbarButtonComponent-label {
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                }
-            `;
-            document.head.appendChild(style);
-        }
-    }
+
 }

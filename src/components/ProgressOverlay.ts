@@ -1,4 +1,4 @@
-import '/style/progress.css'
+import '/src/style/progress.css'
 
 export class ProgressOverlay {
   private element: HTMLElement;
