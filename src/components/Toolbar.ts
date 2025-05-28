@@ -37,7 +37,6 @@ export function addButtonToToolbarElement(toolbar: Element, serviceContainer: Se
   
   const menuItemsHTML = items.map(item => {
     return `
-      ${EspControlPanelButton}
       <div class="esp-menu-item" role="menuitem" tabindex="-1">
         ${item.text}
       </div>
@@ -45,6 +44,7 @@ export function addButtonToToolbarElement(toolbar: Element, serviceContainer: Se
   }).join('');
   
   div.innerHTML = `
+    ${EspControlPanelButton}
     <div class="esp-dropdown-menu">
       ${menuItemsHTML}
     </div>
