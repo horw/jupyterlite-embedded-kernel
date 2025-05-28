@@ -8,9 +8,12 @@ export class ResetDeviceUI{
         this.deviceService = deviceService
     }
 
-    public action(){
-        this.deviceService.reset()
-        callAlert("Device was reset")
+    public action() {
+        if (this.deviceService.isConnected()) {
+            this.deviceService.reset();
+            callAlert("The device has been reset.");
+        } else {
+            callAlert("Please connect the device first.");
+        }
     }
-
 }
