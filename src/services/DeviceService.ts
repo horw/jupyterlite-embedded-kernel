@@ -1,4 +1,5 @@
 import { Transport } from 'esptool-js';
+import {callAlert} from "../components/Alert";
 
 export class DeviceService {
   private port: SerialPort | null = null;
@@ -39,6 +40,11 @@ export class DeviceService {
       }
       await this.transport.connect()
     } catch (err) {
+      callAlert(
+          "Unable to connect to the device. " +
+          "It might already be connected somewhere else. " +
+          "Please check and try again."
+      );
       console.error('Failed to connect:', err);
       throw err;
     }
