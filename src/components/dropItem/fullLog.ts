@@ -1,4 +1,5 @@
 import { ConsoleService } from "../../services/ConsoleService";
+import "/src/style/fullLog.css";
 
 export class FullLogPanel {
     public text: string = "Full Log";
@@ -12,93 +13,42 @@ export class FullLogPanel {
     private logContent: string = "";
 
     constructor(private consoleService: ConsoleService) {
-        // Create panel elements
         this.createPanelElements();
         
-        // Add drag functionality
         this.addDragHandlers();
 
-        // Set up initial state
         if (this.panel) {
             this.panel.style.display = "none";
         }
 
         document.addEventListener('consoleTextChanged', (e) => {
             const customEvent = e as CustomEvent;
-            this.updateLogContent()
+            this.refreshLog();
             console.log('Custom event received. Text was changed:', customEvent.detail.text);
         });
         
     }
 
     private createPanelElements(): void {
-        // Main panel container
         this.panel = document.createElement("div");
         this.panel.className = "full-log-panel";
-        this.panel.style.position = "absolute";
-        this.panel.style.width = "800px";
-        this.panel.style.height = "600px";
-        this.panel.style.backgroundColor = "#2b2b2b";
-        this.panel.style.border = "1px solid #444";
-        this.panel.style.borderRadius = "4px";
-        this.panel.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.3)";
-        this.panel.style.zIndex = "1000";
-        this.panel.style.top = "100px";
-        this.panel.style.left = "100px";
-        this.panel.style.display = "flex";
-        this.panel.style.flexDirection = "column";
-        this.panel.style.overflow = "hidden";
+        
+        this.panel.innerHTML = `
+            <div class="full-log-header">
+                <span class="full-log-title">Console Log</span>
+                <button class="full-log-close-btn">×</button>
+            </div>
+            <div class="full-log-content"></div>
+        `;
+        
+        this.header = this.panel.querySelector(".full-log-header") as HTMLDivElement;
+        this.content = this.panel.querySelector(".full-log-content") as HTMLDivElement;
+        
+        const closeBtn = this.panel.querySelector(".full-log-close-btn");
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => this.close());
+        }
 
-        // Panel header
-        this.header = document.createElement("div");
-        this.header.className = "full-log-header";
-        this.header.style.padding = "8px 12px";
-        this.header.style.backgroundColor = "#3c3c3c";
-        this.header.style.borderBottom = "1px solid #555";
-        this.header.style.display = "flex";
-        this.header.style.justifyContent = "space-between";
-        this.header.style.alignItems = "center";
-        this.header.style.cursor = "move";
-
-        // Header title
-        const title = document.createElement("span");
-        title.textContent = "Console Log";
-        title.style.fontWeight = "bold";
-        title.style.color = "#e0e0e0";
-
-        // Close button
-        const closeBtn = document.createElement("button");
-        closeBtn.textContent = "×";
-        closeBtn.style.background = "none";
-        closeBtn.style.border = "none";
-        closeBtn.style.color = "#e0e0e0";
-        closeBtn.style.fontSize = "20px";
-        closeBtn.style.cursor = "pointer";
-        closeBtn.style.padding = "0 5px";
-        closeBtn.onclick = () => this.close();
-
-        // Add title and close button to header
-        this.header.appendChild(title);
-        this.header.appendChild(closeBtn);
-
-        // Content area for logs
-        this.content = document.createElement("div");
-        this.content.className = "full-log-content";
-        this.content.style.flex = "1";
-        this.content.style.padding = "12px";
-        this.content.style.overflow = "auto";
-        this.content.style.backgroundColor = "#1e1e1e";
-        this.content.style.color = "#e0e0e0";
-        this.content.style.fontFamily = "monospace";
-        this.content.style.fontSize = "14px";
-        this.content.style.whiteSpace = "pre-wrap";
-        this.content.style.lineHeight = "1.5";
-
-        // Add elements to panel
-        this.panel.appendChild(this.header);
-        this.panel.appendChild(this.content);
-
-        // Add panel to document body
         document.body.appendChild(this.panel);
     }
 
@@ -140,10 +90,8 @@ export class FullLogPanel {
     }
 
     private open(): void {
-        // Update log content from ConsoleService
         this.updateLogContent();
         
-        // Show the panel
         if (this.panel) {
             this.panel.style.display = "flex";
         }
@@ -158,19 +106,14 @@ export class FullLogPanel {
     }
 
     private updateLogContent(): void {
-        // Get the latest log content from ConsoleService
         this.logContent = this.consoleService.fullLog;
         
-        // Update the content in the panel if it exists
         if (this.content) {
             this.content.textContent = this.logContent || "No log data available.";
-            
-            // Scroll to bottom
             this.content.scrollTop = this.content.scrollHeight;
         }
     }
 
-    // Method to manually refresh the log content
     public refreshLog(): void {
         if (this.isOpen) {
             this.updateLogContent();
