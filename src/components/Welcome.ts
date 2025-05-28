@@ -57,13 +57,12 @@ export class Welcome {
                 <div class="jp-welcome-content">
                     <p>Thank you for using JupyterLite Embedded Kernel! Here's how to get started:</p>
                     <ul>
-                        <li>
-                            Use the ${EspControlPanelButton} in the toolbar to interact with your device
-                        </li>
+                        <li>Use the <span class="jp-welcome-inline-button">${EspControlPanelButton}</span> in the toolbar to interact with your device</li>
                         <li>Connect to your device using the Connect Device option</li>
                         <li>Flash firmware to your device with the Flash Device tool</li>
                         <li>Create new notebooks to write and execute code</li>
                         <li>Use the device's capabilities directly from your notebooks</li>
+                        <li>If you found some issue or way to improve, please open it in  <a href="https://github.com/espressif/jupyter-lite-micropython/issues"> GitHub</a></li>
                     </ul>
                     <div class="jp-welcome-checkbox-container">
                         <label class="jp-welcome-checkbox-label">
@@ -258,6 +257,28 @@ export class Welcome {
                 
                 .jp-Button.jp-mod-accept.jp-mod-styled:hover {
                     background-color: var(--jp-brand-color0, #1976D2);
+                }
+                
+                /* Inline button styling */
+                .jp-welcome-inline-button {
+                    display: inline-flex;
+                    vertical-align: middle;
+                }
+                
+                .jp-welcome-inline-button .jp-ToolbarButton {
+                    font-size: inherit;
+                    height: auto;
+                    transform-origin: left center;
+                    display: inline-flex;
+                    border: 1px solid var(--jp-border-color1);
+                    background-color: var(--jp-layout-color1);
+                    box-shadow: var(--jp-elevation-z1);
+                    white-space: nowrap;
+                }
+                
+                .jp-welcome-inline-button .jp-ToolbarButtonComponent-label {
+                    overflow: hidden;
+                    text-overflow: ellipsis;
                 }
             `;
             document.head.appendChild(style);
