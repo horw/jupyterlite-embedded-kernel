@@ -1,6 +1,7 @@
 import { BaseKernel } from '@jupyterlite/kernel';
 import { KernelMessage } from '@jupyterlab/services';
 import { ServiceContainer } from './services/ServiceContainer';
+import {callAlert} from "./components/Alert";
 
 export class EmbeddedKernel extends BaseKernel {
 
@@ -41,16 +42,34 @@ export class EmbeddedKernel extends BaseKernel {
     content: KernelMessage.IExecuteRequestMsg['content'],
   ): Promise<KernelMessage.IExecuteReplyMsg['content']> {
 
-    console.log("[Kernel] executeRequest - Starting execution");
-    if (this.serviceContainer.deviceService == undefined){
-      console.log("[Kernel] executeRequest - DeviceService is undefined");
+    const deviceService = this.serviceContainer.deviceService;
+
+    if (!deviceService) {
+      const message = "[Kernel] executeRequest - DeviceService is undefined";
+      console.error(message);
+      callAlert(message);
+
       return {
-          status: 'error',
-          execution_count: this.executionCount,
-          ename: 'ValueError',
-          evalue: 'Missing MicroPython firmware URL',
-          traceback: ['Please provide MicroPython firmware URL']
-        };
+        status: 'error',
+        execution_count: this.executionCount,
+        ename: 'ValueError',
+        evalue: 'Missing MicroPython firmware URL',
+        traceback: ['DeviceService is not available. Please provide MicroPython firmware URL.']
+      };
+    }
+
+    if (!deviceService.isConnected()) {
+      const message = "[Kernel] executeRequest - DeviceService is not connected.";
+      console.warn(message);
+      callAlert(message);
+
+      return {
+        status: 'error',
+        execution_count: this.executionCount,
+        ename: 'ValueError',
+        evalue: 'Device is not connected',
+        traceback: ['Device is not connected. Please ensure the device is connected and try again.']
+      };
     }
 
     console.log("[Kernel] executeRequest - Processing code");
