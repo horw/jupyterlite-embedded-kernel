@@ -10,11 +10,9 @@ export class ConnectDeviceUI{
     public action(){
         if(this.deviceService.isConnected()){
             callAlert(
-            `
-                Device already connected
-                if you want to recconect to another device please open new notebook, or reload page
-            `
-            )
+                "Device is already connected. " +
+                "To connect to a different device, please open a new notebook or reload the page."
+            );
         }
         this.deviceService.connect()
     }
