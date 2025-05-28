@@ -5,6 +5,7 @@ import {ResetDeviceUI} from "./dropItem/resetDevice";
 import {DeviceIndicator} from "./DeviceIndicator";
 
 import "/src/style/toolbar.css";
+import {FullLogPanel} from "./dropItem/fullLog";
 
 export const EspControlPanelButton = `
     <button class="jp-ToolbarButton jp-Toolbar-item esp-button" title="ESP Options">
@@ -30,6 +31,7 @@ export function addButtonToToolbarElement(toolbar: Element, serviceContainer: Se
     new ConnectDeviceUI(serviceContainer.deviceService),
     new FlashDeviceUI(serviceContainer.deviceService, serviceContainer.firmwareService, serviceContainer.flashService),
     new ResetDeviceUI(serviceContainer.deviceService),
+    new FullLogPanel(serviceContainer.consoleService),
   ];
   
   const div = document.createElement('div');

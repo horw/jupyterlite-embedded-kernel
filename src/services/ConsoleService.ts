@@ -8,9 +8,22 @@ export interface ReadOutputResult {
 }
 
 export class ConsoleService {
-
+  public fullLog: string = '';
   constructor(private deviceService: DeviceService) {}
 
+  notify(text: string){
+    const textChangedEvent = new CustomEvent('consoleTextChanged', {
+      detail: { text }
+    });
+    document.dispatchEvent(textChangedEvent);
+  }
+  updateFullLog(text: string){
+    if (this.fullLog.length > 30000){
+      this.fullLog = ''
+    }
+    this.fullLog += text;
+    this.notify(text);
+  }
   async readAndParseOutput(
     streamCallback: StreamCallback
   ): Promise<ReadOutputResult> {
@@ -44,6 +57,8 @@ export class ConsoleService {
         
         if (text) {
           buffer += text;
+          this.updateFullLog(text);
+
           let current_buffer = text;
           const truncate = (str: string, len = 50) => str.substring(0, len) + (str.length > len ? '...' : '');
           logger('Received text', truncate(text));
