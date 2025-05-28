@@ -6,6 +6,20 @@ import {DeviceIndicator} from "./DeviceIndicator";
 
 import "/style/toolbar.css";
 
+export const EspControlPanelButton = `
+    <button class="jp-ToolbarButton jp-Toolbar-item esp-button" title="ESP Options">
+      <div class="esp-logo-container">
+        <img src="https://www.cdnlogo.com/logos/e/41/espressif-systems.svg" alt="ESP" class="esp-logo">
+      </div>
+      <span class="jp-ToolbarButtonComponent-label esp-button-label">ESP Control Panel</span>
+      <span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" viewBox="0 0 18 18" data-icon="ui-components:caret-down-empty" style="vertical-align: middle;">
+          <path fill="#616161" d="M5.2 5.9 9 9.7l3.8-3.8L14 7.1l-4.9 5-4.9-5z" class="jp-icon3" shape-rendering="geometricPrecision"></path>
+        </svg>
+      </span>
+    </button>
+`
+
 export function addButtonToToolbarElement(toolbar: Element, serviceContainer: ServiceContainer): void {
   const deviceStatusIndicator = new DeviceIndicator(serviceContainer.deviceService);
   const statusElement = deviceStatusIndicator.getElement();
@@ -23,6 +37,7 @@ export function addButtonToToolbarElement(toolbar: Element, serviceContainer: Se
   
   const menuItemsHTML = items.map(item => {
     return `
+      ${EspControlPanelButton}
       <div class="esp-menu-item" role="menuitem" tabindex="-1">
         ${item.text}
       </div>
@@ -30,17 +45,6 @@ export function addButtonToToolbarElement(toolbar: Element, serviceContainer: Se
   }).join('');
   
   div.innerHTML = `
-    <button class="jp-ToolbarButton jp-Toolbar-item esp-button" title="ESP Options">
-      <div class="esp-logo-container">
-        <img src="https://www.cdnlogo.com/logos/e/41/espressif-systems.svg" alt="ESP" class="esp-logo">
-      </div>
-      <span class="jp-ToolbarButtonComponent-label esp-button-label">ESP Control Panel</span>
-      <span>
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" viewBox="0 0 18 18" data-icon="ui-components:caret-down-empty" style="vertical-align: middle;">
-          <path fill="#616161" d="M5.2 5.9 9 9.7l3.8-3.8L14 7.1l-4.9 5-4.9-5z" class="jp-icon3" shape-rendering="geometricPrecision"></path>
-        </svg>
-      </span>
-    </button>
     <div class="esp-dropdown-menu">
       ${menuItemsHTML}
     </div>
@@ -49,8 +53,12 @@ export function addButtonToToolbarElement(toolbar: Element, serviceContainer: Se
   const button = div.querySelector('.esp-button');
   const dropdownContent = div.querySelector('.esp-dropdown-menu');
   const menuItems = div.querySelectorAll('.esp-menu-item');
-  
+
   if (button && dropdownContent) {
+    statusElement.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdownContent.classList.toggle('visible');
+    });
     button.addEventListener('click', (e) => {
       e.stopPropagation();
       dropdownContent.classList.toggle('visible');

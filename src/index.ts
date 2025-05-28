@@ -3,6 +3,7 @@ import { IKernel, IKernelSpecs } from '@jupyterlite/kernel';
 import { EmbeddedKernel } from './kernel';
 import { ServiceContainer } from './services/ServiceContainer';
 import {addButtonToToolbarElement} from "./components/Toolbar";
+import {Welcome} from "./components/Welcome";
 
 const kernelPlugin: JupyterLiteServerPlugin<void> = {
   id: 'jupyterlite-embedded-kernel:kernel',
@@ -37,6 +38,9 @@ const kernelPlugin: JupyterLiteServerPlugin<void> = {
         },
       },
       create: async (options: IKernel.IOptions): Promise<IKernel> => {
+
+        const welcome = new Welcome()
+        welcome.showWelcome();
         const el = document.activeElement?.closest('.jp-NotebookPanel');
         const toolbar = el?.querySelector('.jp-NotebookPanel-toolbar');
 
